@@ -7,10 +7,10 @@
       </div>
 
       <el-menu
-          router
-          :default-active="currentRoute"
-          :collapse="isCollapsed"
-          class="sidebar-menu"
+        router
+        :default-active="currentRoute"
+        :collapse="isCollapsed"
+        class="sidebar-menu"
       >
         <el-menu-item index="/">
           <el-icon><Odometer /></el-icon>
@@ -41,26 +41,22 @@
         <div class="header-content">
           <div class="left-section">
             <el-button
-                @click="toggleCollapse"
-                :icon="isCollapsed ? Expand : Fold"
-                circle
+              @click="toggleCollapse"
+              :icon="isCollapsed ? Expand : Fold"
+              circle
             />
             <el-breadcrumb separator="/">
-              <el-breadcrumb-item :to="{ path: '/' }">Dashboard</el-breadcrumb-item>
+              <el-breadcrumb-item :to="{ path: '/' }"
+                >Dashboard</el-breadcrumb-item
+              >
               <el-breadcrumb-item>{{ currentPage }}</el-breadcrumb-item>
             </el-breadcrumb>
           </div>
           <div class="right-section">
             <el-tooltip :content="themeTooltip">
-              <el-button
-                  @click="toggleTheme"
-                  :icon="themeIcon"
-                  circle
-              />
+              <el-button @click="toggleTheme" :icon="themeIcon" circle />
             </el-tooltip>
-            <div class="user-info">
-              Welcome, Admin
-            </div>
+            <div class="user-info">Welcome, Admin</div>
           </div>
         </div>
       </el-header>
@@ -78,10 +74,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { useTabsStore } from '@/store/tabs'
-import { useThemeStore } from '@/store/theme'
+import { ref, computed, watch } from "vue";
+import { useRoute } from "vue-router";
+import { useTabsStore } from "@/store/tabs";
+import { useThemeStore } from "@/store/theme";
 import {
   Odometer,
   Setting,
@@ -90,50 +86,46 @@ import {
   Fold,
   Expand,
   Sunny,
-  Moon
-} from '@element-plus/icons-vue'
-import TabsView from '@/components/TabsView.vue'
+  Moon,
+} from "@element-plus/icons-vue";
+import TabsView from "@/components/TabsView.vue";
 
-const isCollapsed = ref(false)
-const route = useRoute()
-const tabsStore = useTabsStore()
-const themeStore = useThemeStore()
+const isCollapsed = ref(false);
+const route = useRoute();
+const tabsStore = useTabsStore();
+const themeStore = useThemeStore();
 
-const asideWidth = computed(() =>
-    isCollapsed.value ? '64px' : '200px'
-)
+const asideWidth = computed(() => (isCollapsed.value ? "64px" : "200px"));
 
-const currentRoute = computed(() => route.path)
+const currentRoute = computed(() => route.path);
 
 const currentPage = computed(() => {
-  const name = route.name?.toString() || 'Dashboard'
-  return name.charAt(0).toUpperCase() + name.slice(1)
-})
+  const name = route.name?.toString() || "Dashboard";
+  return name.charAt(0).toUpperCase() + name.slice(1);
+});
 
-const themeIcon = computed(() =>
-    themeStore.isDark ? Sunny : Moon
-)
+const themeIcon = computed(() => (themeStore.isDark ? Sunny : Moon));
 
 const themeTooltip = computed(() =>
-    themeStore.isDark ? 'Switch to light theme' : 'Switch to dark theme'
-)
+  themeStore.isDark ? "Switch to light theme" : "Switch to dark theme",
+);
 
 const toggleCollapse = () => {
-  isCollapsed.value = !isCollapsed.value
-}
+  isCollapsed.value = !isCollapsed.value;
+};
 
 const toggleTheme = () => {
-  themeStore.toggleTheme()
-}
+  themeStore.toggleTheme();
+};
 
 // Add current route to tabs when route changes
 watch(
-    () => route,
-    (newRoute) => {
-      tabsStore.addTab(newRoute)
-    },
-    { immediate: true, deep: true }
-)
+  () => route,
+  (newRoute) => {
+    tabsStore.addTab(newRoute);
+  },
+  { immediate: true, deep: true },
+);
 </script>
 
 <style scoped>
