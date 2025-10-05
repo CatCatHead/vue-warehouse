@@ -1,4 +1,5 @@
 <template>
+  <WaveBackground />
   <div class="login-page">
     <el-card class="login-card">
       <template #header>
@@ -56,6 +57,7 @@ import { useRouter } from "vue-router";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { User, Lock } from "@element-plus/icons-vue";
 import { useAuthStore } from "@/store/auth";
+import WaveBackground from "@/styles/WaveBackground.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
