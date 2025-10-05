@@ -1,0 +1,75 @@
+/* Light theme - Element Plus default */
+:root {
+    --el-color-primary: #409EFF;
+    --el-color-success: #67C23A;
+    --el-color-warning: #E6A23C;
+    --el-color-danger: #F56C6C;
+    --el-color-info: #909399;
+
+    --el-bg-color: #ffffff;
+    --el-text-color-primary: #303133;
+    --el-text-color-regular: #606266;
+    --el-border-color-light: #e4e7ed;
+    --el-bg-color-page: #f0f2f5;
+
+    /* Custom layout variables */
+    --sidebar-bg: #304156;
+    --header-bg: #ffffff;
+    --tabs-bg: #ffffff;
+}
+
+/* Dark theme overrides */
+:root.dark {
+    /* Custom layout variables for dark mode */
+    --sidebar-bg: #1f1f1f;
+    --header-bg: #141414;
+    --tabs-bg: #141414;
+}
+
+/* Apply theme to layout components */
+.layout-container {
+    background-color: var(--el-bg-color-page);
+}
+
+.sidebar {
+    background-color: var(--sidebar-bg) !important;
+}
+
+.header {
+    background-color: var(--header-bg) !important;
+    border-bottom-color: var(--el-border-color-light) !important;
+}
+
+.tabs-container {
+    background-color: var(--tabs-bg) !important;
+}
+
+.main-content {
+    background-color: var(--el-bg-color-page) !important;
+}
+
+/* Ensure sidebar menu uses appropriate colors */
+.sidebar-menu {
+    background-color: var(--sidebar-bg) !important;
+    border: none !important;
+}
+
+.sidebar-menu .el-menu-item,
+.sidebar-menu .el-sub-menu__title {
+    color: #bfcbd9 !important;
+}
+
+.sidebar-menu .el-menu-item:hover,
+.sidebar-menu .el-sub-menu__title:hover {
+    background-color: #263445 !important;
+}
+
+.sidebar-menu .el-menu-item.is-active {
+    background-color: #409EFF !important;
+    color: #ffffff !important;
+}
+
+/* Fix logo color */
+.logo {
+    color: white !important;
+}
