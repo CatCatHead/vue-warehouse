@@ -5,11 +5,12 @@ const routes = [
     path: "/login",
     name: "Login",
     component: () => import("@/views/Login.vue"),
-    meta: { title: "Login" },
+    meta: { title: "Login", requiresAuth: false },
   },
   {
     path: "/",
     component: () => import("@/layouts/AppLayout.vue"),
+    meta: { requiresAuth: true },
     children: [
       {
         path: "",

@@ -2,12 +2,14 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { AuthStorage } from "@/utils/auth";
 import { ElMessage } from "element-plus";
+import { useRouter } from "vue-router";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const accessToken = ref("");
   const refreshToken = ref("");
   const isAuthenticated = ref(false);
+  const router = useRouter();
 
   const initializeAuth = () => {
     const savedAccessToken = AuthStorage.getAccessToken();
@@ -51,7 +53,21 @@ export const useAuthStore = defineStore("auth", () => {
       return false;
     }
   };
+  const logout = async (): Promise<void> => {
+    try {
+      user.value = null;
+      accessToken.value = "";
+      refreshToken.value = "";
+      isAuthenticated.value = false;
 
+      AuthStorage.clearAuth();
+    } catch (error) {
+      console.log("logout failed");
+    } finally {
+      AuthStorage.clearAuth();
+      router.replace("/login");
+    }
+  };
   initializeAuth();
 
   return {
@@ -60,6 +76,7 @@ export const useAuthStore = defineStore("auth", () => {
     refreshToken,
     isAuthenticated,
     login,
+    logout,
   };
 });
 
