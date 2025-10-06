@@ -63,6 +63,12 @@
               />
             </el-tooltip>
             <div class="user-info">Welcome, Admin</div>
+
+            <el-badge :value="3" class="notification-badge">
+              <el-button :icon="Bell" circle />
+            </el-badge>
+
+            <UserDropdown />
           </div>
         </div>
       </el-header>
@@ -93,6 +99,7 @@ import {
   Moon,
 } from "@element-plus/icons-vue";
 import TabsView from "@/components/TabsView.vue";
+import UserDropdown from "@/components/UserDropdown.vue";
 
 const route = useRoute();
 const tabsStore = useTabsStore();
@@ -221,5 +228,15 @@ watch(
 .theme-toggle-btn:active::after {
   width: 100px;
   height: 100px;
+}
+
+.notification-badge {
+  margin-right: 8px;
+}
+
+.right-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 </style>
