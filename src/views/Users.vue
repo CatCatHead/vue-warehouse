@@ -302,7 +302,7 @@ const handleStatusChange = async (user: User) => {
   try {
     await new Promise((resolve) => setTimeout(resolve, 300));
     ElMessage.success(
-      `用户 ${user.status === "active" ? "Able" : "Disable"} successfully.`,
+      `User ${user.status === "active" ? "Able" : "Disable"} successfully.`,
     );
   } catch (error) {
     user.status = user.status === "active" ? "inactive" : "active";
