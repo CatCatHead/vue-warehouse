@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard">
     <h1>Dashboard</h1>
-    <p>Welcome to your VaaS admin dashboard</p>
+    <p>Welcome to your warehouse admin dashboard</p>
 
     <el-row :gutter="20" class="stats-row">
       <el-col :span="6">

@@ -4,15 +4,17 @@
 
 <script setup lang="ts">
 import { onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 
+const router = useRouter();
+const authStore = useAuthStore();
+
 onMounted(() => {
-  // 这里使用 store 会触发 store 的初始化，然后我们可以在控制台看到输出
-  const authStore = useAuthStore();
-  console.log(
-    "App mounted, auth state initialized:",
-    authStore.isAuthenticated,
-  );
+  console.log("App mounted, auth state:", {
+    isAuthenticated: authStore.isAuthenticated,
+    accessToken: authStore.accessToken,
+  });
 });
 </script>
 
@@ -20,10 +22,14 @@ onMounted(() => {
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
+
 html,
 body,
 #app {
   height: 100%;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 </style>

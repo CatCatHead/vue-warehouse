@@ -73,3 +73,39 @@
 .logo {
     color: white !important;
 }
+
+* {
+    transition: background-color 0.5s ease,
+    color 0.5s ease,
+    border-color 0.5s ease,
+    box-shadow 0.5s ease;
+}
+
+.el-loading-mask,
+.el-button:active,
+.el-input__inner:focus {
+    transition: none !important;
+}
+
+.theme-toggle-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.theme-toggle-btn:active::after {
+    width: 100px;
+    height: 100px;
+}

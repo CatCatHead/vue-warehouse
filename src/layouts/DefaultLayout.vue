@@ -3,15 +3,15 @@
     <el-aside :width="asideWidth" class="aside">
       <div class="logo">
         <el-icon class="logo-icon"><Management /></el-icon>
-        <span class="logo-text">VaaS Admin</span>
+        <span class="logo-text">Warehouse Admin</span>
       </div>
       <el-menu
-          :default-active="activeMenu"
-          class="sidebar-menu"
-          router
-          background-color="#001529"
-          text-color="#fff"
-          active-text-color="#ffd04b"
+        :default-active="activeMenu"
+        class="sidebar-menu"
+        router
+        background-color="#001529"
+        text-color="#fff"
+        active-text-color="#ffd04b"
       >
         <el-menu-item index="/">
           <el-icon><House /></el-icon>
@@ -25,14 +25,9 @@
     </el-aside>
 
     <el-container>
-      <!-- 顶部Header -->
       <el-header class="header">
         <div class="header-left">
-          <el-button
-              type="text"
-              @click="toggleCollapse"
-              class="collapse-btn"
-          >
+          <el-button type="text" @click="toggleCollapse" class="collapse-btn">
             <el-icon v-if="isCollapsed"><Expand /></el-icon>
             <el-icon v-else><Fold /></el-icon>
           </el-button>
@@ -42,7 +37,6 @@
         </div>
       </el-header>
 
-      <!-- 主内容区域 -->
       <el-main class="main">
         <router-view />
       </el-main>
@@ -51,20 +45,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { Management, House, InfoFilled, Expand, Fold } from '@element-plus/icons-vue'
+import { ref, computed } from "vue";
+import { useRoute } from "vue-router";
+import {
+  Management,
+  House,
+  InfoFilled,
+  Expand,
+  Fold,
+} from "@element-plus/icons-vue";
 
-const isCollapsed = ref(false)
+const isCollapsed = ref(false);
 
-const asideWidth = computed(() => isCollapsed.value ? '64px' : '200px')
+const asideWidth = computed(() => (isCollapsed.value ? "64px" : "200px"));
 
-const route = useRoute()
-const activeMenu = computed(() => route.path)
+const route = useRoute();
+const activeMenu = computed(() => route.path);
 
 const toggleCollapse = () => {
-  isCollapsed.value = !isCollapsed.value
-}
+  isCollapsed.value = !isCollapsed.value;
+};
 </script>
 
 <style scoped>

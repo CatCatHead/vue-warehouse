@@ -1,6 +1,5 @@
 <template>
   <el-container class="layout-container">
-    <!-- Sidebar -->
     <el-aside :width="asideWidth" class="sidebar">
       <div class="logo">
         <span v-if="!isCollapsed">VaaS Admin</span>
@@ -11,6 +10,9 @@
         :default-active="currentRoute"
         :collapse="isCollapsed"
         class="sidebar-menu"
+        background-color="#304156"
+        text-color="#bfcbd9"
+        active-text-color="#409EFF"
       >
         <el-menu-item index="/">
           <el-icon><Odometer /></el-icon>
@@ -20,11 +22,11 @@
         <el-sub-menu index="management">
           <template #title>
             <el-icon><Setting /></el-icon>
-            <span>Management</span>
+            <span>System</span>
           </template>
           <el-menu-item index="/users">
             <el-icon><User /></el-icon>
-            <span>Users</span>
+            <span>User</span>
           </el-menu-item>
         </el-sub-menu>
 
@@ -35,7 +37,6 @@
       </el-menu>
     </el-aside>
 
-    <!-- Main content area -->
     <el-container>
       <el-header class="header">
         <div class="header-content">
@@ -54,17 +55,19 @@
           </div>
           <div class="right-section">
             <el-tooltip :content="themeTooltip">
-              <el-button @click="toggleTheme" :icon="themeIcon" circle />
+              <el-button
+                @click="toggleTheme"
+                :icon="themeIcon"
+                circle
+                class="theme-toggle-btn"
+              />
             </el-tooltip>
             <div class="user-info">Welcome, Admin</div>
           </div>
         </div>
       </el-header>
 
-      <!-- Tabs View -->
-      <div class="tabs-container">
-        <TabsView />
-      </div>
+      <TabsView />
 
       <el-main class="main-content">
         <router-view />
@@ -100,25 +103,23 @@ const asideWidth = computed(() => (isCollapsed.value ? "64px" : "200px"));
 const currentRoute = computed(() => route.path);
 
 const currentPage = computed(() => {
-  const name = route.name?.toString() || "Dashboard";
-  return name.charAt(0).toUpperCase() + name.slice(1);
+  const name = route.name?.toString() || "dashboard";
+  return name;
 });
 
 const themeIcon = computed(() => (themeStore.isDark ? Sunny : Moon));
 
-const themeTooltip = computed(() =>
-  themeStore.isDark ? "Switch to light theme" : "Switch to dark theme",
-);
+const themeTooltip = computed(() => (themeStore.isDark ? "light" : "dark"));
 
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
 const toggleTheme = () => {
+  console.log("Switch Theme");
   themeStore.toggleTheme();
 };
 
-// Add current route to tabs when route changes
 watch(
   () => route,
   (newRoute) => {
@@ -134,6 +135,7 @@ watch(
 }
 
 .sidebar {
+  background-color: #304156;
   transition: width 0.3s;
 }
 
@@ -142,12 +144,15 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
+  color: white;
   font-size: 18px;
   font-weight: bold;
   border-bottom: 1px solid #263445;
 }
 
 .header {
+  background-color: var(--el-bg-color);
+  border-bottom: 1px solid var(--el-border-color-light);
   padding: 0 20px;
 }
 
@@ -174,21 +179,41 @@ watch(
   color: var(--el-text-color-regular);
 }
 
-.tabs-container {
-  background: var(--tabs-bg);
-  border-bottom: 1px solid var(--el-border-color-light);
-}
-
 .main-content {
   padding: 20px;
+  background-color: var(--el-bg-color-page);
 }
 
-/* Menu style adjustments */
 .sidebar-menu {
   border: none;
 }
 
 .sidebar-menu:not(.el-menu--collapse) {
   width: 200px;
+}
+
+.theme-toggle-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle-btn::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.3s,
+    height 0.3s;
+}
+
+.theme-toggle-btn:active::after {
+  width: 100px;
+  height: 100px;
 }
 </style>
