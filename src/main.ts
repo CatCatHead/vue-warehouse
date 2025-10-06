@@ -15,6 +15,14 @@ app.use(pinia);
 app.use(ElementPlus);
 app.use(router);
 
+//Initialize them and sidebar status
+import { useThemeStore } from "@/store/theme";
+const themeStore = useThemeStore();
+themeStore.loadTheme();
+
+import { useLayoutStore } from "@/store/layout";
+useLayoutStore();
+
 setupRouterGuards(router);
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

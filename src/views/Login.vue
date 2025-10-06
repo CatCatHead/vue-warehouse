@@ -58,6 +58,7 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { User, Lock } from "@element-plus/icons-vue";
 import { useAuthStore } from "@/store/auth";
 import WaveBackground from "@/styles/WaveBackground.vue";
+import useThemeStore from "@/store/theme.ts"
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -101,6 +102,7 @@ const handleLogin = async () => {
   } catch (error) {
     console.error("Login error:", error);
   } finally {
+    useThemeStore.applyTheme();
     loading.value = false;
   }
 };

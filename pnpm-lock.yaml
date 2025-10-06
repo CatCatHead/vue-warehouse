@@ -17,9 +17,6 @@ importers:
       pinia:
         specifier: ^3.0.3
         version: 3.0.3(typescript@5.9.3)(vue@3.5.22(typescript@5.9.3))
-      prettier:
-        specifier: ^3.6.2
-        version: 3.6.2
       vue:
         specifier: ^3.5.22
         version: 3.5.22(typescript@5.9.3)
@@ -42,6 +39,9 @@ importers:
       element-plus:
         specifier: ^2.11.4
         version: 2.11.4(vue@3.5.22(typescript@5.9.3))
+      prettier:
+        specifier: 3.6.2
+        version: 3.6.2
       typescript:
         specifier: ~5.9.3
         version: 5.9.3

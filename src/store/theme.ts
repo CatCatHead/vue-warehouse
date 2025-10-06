@@ -26,22 +26,12 @@ export const useThemeStore = defineStore("theme", {
       const html = document.documentElement;
       if (this.currentTheme === "dark") {
         html.classList.add("dark");
-        const existingLink = document.getElementById("dark-theme-style");
-        if (!existingLink) {
-          const link = document.createElement("link");
-          link.id = "dark-theme-style";
-          link.rel = "stylesheet";
-          link.href =
-            "/node_modules/element-plus/theme-chalk/dark/css-vars.css";
-          document.head.appendChild(link);
-        }
+
+        import("element-plus/theme-chalk/dark/css-vars.css");
       } else {
         html.classList.remove("dark");
-        const darkStyle = document.getElementById("dark-theme-style");
-        if (darkStyle) {
-          darkStyle.remove();
-        }
       }
+
       localStorage.setItem("vaas-theme", this.currentTheme);
     },
 

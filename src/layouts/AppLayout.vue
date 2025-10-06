@@ -2,13 +2,13 @@
   <el-container class="layout-container">
     <el-aside :width="asideWidth" class="sidebar">
       <div class="logo">
-        <span v-if="!isCollapsed">VaaS Admin</span>
+        <span v-if="!layoutStore.sidebarCollapsed">Warehouse Admin</span>
       </div>
 
       <el-menu
         router
         :default-active="currentRoute"
-        :collapse="isCollapsed"
+        :collapse="layoutStore.sidebarCollapsed"
         class="sidebar-menu"
         background-color="#304156"
         text-color="#bfcbd9"
@@ -43,7 +43,7 @@
           <div class="left-section">
             <el-button
               @click="toggleCollapse"
-              :icon="isCollapsed ? Expand : Fold"
+              :icon="layoutStore.sidebarCollapsed ? Expand : Fold"
               circle
             />
             <el-breadcrumb separator="/">
@@ -77,10 +77,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useTabsStore } from "@/store/tabs";
 import { useThemeStore } from "@/store/theme";
+import { useLayoutStore } from "@/store/layout";
 import {
   Odometer,
   Setting,
@@ -93,26 +94,30 @@ import {
 } from "@element-plus/icons-vue";
 import TabsView from "@/components/TabsView.vue";
 
-const isCollapsed = ref(false);
 const route = useRoute();
 const tabsStore = useTabsStore();
 const themeStore = useThemeStore();
+const layoutStore = useLayoutStore();
 
-const asideWidth = computed(() => (isCollapsed.value ? "64px" : "200px"));
+const asideWidth = computed(() =>
+  layoutStore.sidebarCollapsed ? "64px" : "200px",
+);
 
 const currentRoute = computed(() => route.path);
 
 const currentPage = computed(() => {
-  const name = route.name?.toString() || "dashboard";
+  const name = route.name?.toString() || "仪表板";
   return name;
 });
 
 const themeIcon = computed(() => (themeStore.isDark ? Sunny : Moon));
 
-const themeTooltip = computed(() => (themeStore.isDark ? "light" : "dark"));
+const themeTooltip = computed(() =>
+  themeStore.isDark ? "to light" : "to dark",
+);
 
 const toggleCollapse = () => {
-  isCollapsed.value = !isCollapsed.value;
+  layoutStore.toggleSidebar();
 };
 
 const toggleTheme = () => {
@@ -192,6 +197,7 @@ watch(
   width: 200px;
 }
 
+/* 主题切换按钮的简单涟漪效果 */
 .theme-toggle-btn {
   position: relative;
   overflow: hidden;
