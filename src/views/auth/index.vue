@@ -107,26 +107,4 @@ const handleLogin = async () => {
 };
 </script>
 
-<style scoped>
-.login-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 60vh;
-  padding: 20px;
-}
-
-.login-card {
-  width: 400px;
-  max-width: 90vw;
-}
-
-.login-header {
-  text-align: center;
-}
-
-.login-header h2 {
-  margin: 0;
-  color: #409eff;
-}
-</style>
+<style src="./index.css" scoped></style>

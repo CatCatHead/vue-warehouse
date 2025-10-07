@@ -4,7 +4,7 @@ const routes = [
   {
     path: "/login",
     name: "Login",
-    component: () => import("@/views/auth/Login.vue"),
+    component: () => import("@/views/auth/index.vue"),
     meta: {
       title: "Login",
       requiresAuth: false,
@@ -39,7 +39,7 @@ const routes = [
       {
         path: "/about",
         name: "About",
-        component: () => import("@/views/sidebar/About.vue"),
+        component: () => import("@/views/about/index.vue"),
         meta: { title: "about" },
       },
       {
