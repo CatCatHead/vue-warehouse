@@ -28,6 +28,10 @@
             <el-icon><User /></el-icon>
             <span>User</span>
           </el-menu-item>
+          <el-menu-item index="/settings">
+            <el-icon><Setting /></el-icon>
+            <span>System Setting</span>
+          </el-menu-item>
         </el-sub-menu>
 
         <el-menu-item index="/about">
