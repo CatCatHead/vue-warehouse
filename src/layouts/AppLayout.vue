@@ -102,8 +102,8 @@ import {
   Sunny,
   Moon,
 } from "@element-plus/icons-vue";
-import TabsView from "@/components/TabsView.vue";
-import UserDropdown from "@/components/UserDropdown.vue";
+import TabsView from "@/components/layout/TabsView.vue";
+import UserDropdown from "@/components/layout/UserDropDown.vue";
 
 const route = useRoute();
 const tabsStore = useTabsStore();

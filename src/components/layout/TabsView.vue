@@ -1,51 +1,51 @@
 <template>
   <div class="tabs-view">
     <el-tabs
-        v-model="activeTab"
-        type="card"
-        closable
-        @tab-click="handleTabClick"
-        @tab-remove="handleTabRemove"
+      v-model="activeTab"
+      type="card"
+      closable
+      @tab-click="handleTabClick"
+      @tab-remove="handleTabRemove"
     >
       <el-tab-pane
-          v-for="tab in tabs"
-          :key="tab.path"
-          :name="tab.path"
-          :label="tab.title"
+        v-for="tab in tabs"
+        :key="tab.path"
+        :name="tab.path"
+        :label="tab.title"
       />
     </el-tabs>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useTabsStore } from '@/store/tabs'
+import { computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { useTabsStore } from "@/store/tabs.ts";
 
-const router = useRouter()
-const route = useRoute()
-const tabsStore = useTabsStore()
+const router = useRouter();
+const route = useRoute();
+const tabsStore = useTabsStore();
 
-const tabs = computed(() => tabsStore.tabs)
+const tabs = computed(() => tabsStore.tabs);
 const activeTab = computed({
   get: () => tabsStore.activeTab,
-  set: (value) => tabsStore.setActiveTab(value)
-})
+  set: (value) => tabsStore.setActiveTab(value),
+});
 
 const handleTabClick = (tab: any) => {
-  router.push(tab.paneName)
-}
+  router.push(tab.paneName);
+};
 
 const handleTabRemove = (path: string) => {
-  if (tabs.value.length <= 1) return
+  if (tabs.value.length <= 1) return;
 
-  tabsStore.removeTab(path)
+  tabsStore.removeTab(path);
 
   if (path === route.path) {
-    const lastTab = tabs.value[tabs.value.length - 1]
-    router.push(lastTab.path)
+    const lastTab = tabs.value[tabs.value.length - 1];
+    router.push(lastTab.path);
   }
-}
+};
 </script>
 
 <style scoped>

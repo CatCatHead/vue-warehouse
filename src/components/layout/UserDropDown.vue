@@ -79,7 +79,7 @@ import {
   SwitchButton,
   ArrowDown,
 } from "@element-plus/icons-vue";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/store/auth.ts";
 
 const router = useRouter();
 const auth = useAuthStore();
