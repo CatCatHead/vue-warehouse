@@ -12,7 +12,11 @@
       <el-divider content-position="left">Features</el-divider>
 
       <div class="features">
-        <div v-for="feature in features" :key="feature.name" class="feature-item">
+        <div
+          v-for="feature in features"
+          :key="feature.name"
+          class="feature-item"
+        >
           <strong>{{ feature.name }}</strong>
           <p>{{ feature.description }}</p>
         </div>
@@ -26,24 +30,24 @@
 </template>
 
 <script setup lang="ts">
-import { USER_INFO } from '@/constants/app'
+import { USER_INFO } from "@/constants/app.ts";
 
-const userInfo = USER_INFO
+const userInfo = USER_INFO;
 
 const features = [
   {
-    name: 'Vue 3',
-    description: 'Composition API and TypeScript'
+    name: "Vue 3",
+    description: "Composition API and TypeScript",
   },
   {
-    name: 'Element Plus',
-    description: 'Modern UI components'
+    name: "Element Plus",
+    description: "Modern UI components",
   },
   {
-    name: 'Vue Router',
-    description: 'Ready to use application routing'
-  }
-]
+    name: "Vue Router",
+    description: "Ready to use application routing",
+  },
+];
 </script>
 
 <style scoped>
@@ -61,7 +65,7 @@ const features = [
 }
 
 .feature-item strong {
-  color: #409EFF;
+  color: #409eff;
 }
 
 .welcome-card {

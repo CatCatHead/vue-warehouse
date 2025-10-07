@@ -4,7 +4,7 @@ const routes = [
   {
     path: "/login",
     name: "Login",
-    component: () => import("@/views/Login.vue"),
+    component: () => import("@/views/common/Login.vue"),
     meta: {
       title: "Login",
       requiresAuth: false,
@@ -13,7 +13,7 @@ const routes = [
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",
-    component: () => import("@/views/NotFound.vue"),
+    component: () => import("@/views/common/NotFound.vue"),
     meta: {
       title: "Page Not Found",
       requiresAuth: false,
@@ -27,25 +27,25 @@ const routes = [
       {
         path: "",
         name: "Dashboard",
-        component: () => import("@/views/Dashboard.vue"),
+        component: () => import("@/views/sidebar/Dashboard.vue"),
         meta: { title: "Dashboard" },
       },
       {
         path: "/users",
         name: "Users",
-        component: () => import("@/views/Users.vue"),
+        component: () => import("@/views/sidebar/Users.vue"),
         meta: { title: "User" },
       },
       {
         path: "/about",
         name: "About",
-        component: () => import("@/views/About.vue"),
+        component: () => import("@/views/sidebar/About.vue"),
         meta: { title: "about" },
       },
       {
         path: "/settings",
         name: "Settings",
-        component: () => import("@/views/Settings.vue"),
+        component: () => import("@/views/system/Settings.vue"),
         meta: { title: "System settings" },
       },
     ],

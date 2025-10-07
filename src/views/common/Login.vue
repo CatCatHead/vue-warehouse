@@ -56,9 +56,9 @@ import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { User, Lock } from "@element-plus/icons-vue";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/store/auth.ts";
 import WaveBackground from "@/styles/WaveBackground.vue";
-import { useThemeStore } from "@/store/theme";
+import { useThemeStore } from "@/store/theme.ts";
 
 const router = useRouter();
 const authStore = useAuthStore();
