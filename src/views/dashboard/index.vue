@@ -1,329 +1,327 @@
-<!-- views/system/user/index.vue -->
 <template>
-  <div class="users-page">
+  <div class="dashboard-page">
+    <!-- Page Header -->
     <div class="page-header">
       <div class="header-left">
-        <h1 class="page-title">User Management</h1>
-        <el-text type="info"
-          >Manage all the user account in this system</el-text
-        >
+        <h1 class="page-title">Dashboard</h1>
+        <el-text type="info">System overview and key metrics</el-text>
       </div>
       <div class="header-actions">
-        <el-button type="primary" :icon="Plus" @click="handleAddUser"
-          >Add user</el-button
-        >
-        <el-button :icon="Refresh" @click="refreshData">Refresh</el-button>
+        <el-button type="primary" :icon="Refresh" @click="refreshData">
+          Refresh
+        </el-button>
+        <el-button :icon="Calendar" @click="handleDateRange">
+          Date Range
+        </el-button>
       </div>
     </div>
 
-    <el-card class="search-card">
-      <el-form :model="searchForm" inline>
-        <el-form-item label="Username">
-          <el-input
-            v-model="searchForm.username"
-            placeholder="Input username"
-            clearable
-            style="width: 200px"
-          />
-        </el-form-item>
-
-        <el-form-item label="User Role">
-          <el-select
-            v-model="searchForm.role"
-            placeholder="Select role"
-            clearable
-            style="width: 150px"
-          >
-            <el-option label="Admin" value="admin" />
-            <el-option label="Editor" value="editor" />
-            <el-option label="Viewer" value="viewer" />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="Status">
-          <el-select
-            v-model="searchForm.status"
-            placeholder="Select status"
-            clearable
-            style="width: 120px"
-          >
-            <el-option label="Active" value="active" />
-            <el-option label="Inactive" value="inactive" />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item>
-          <el-button type="primary" :icon="Search" @click="handleSearch"
-            >Search</el-button
-          >
-          <el-button :icon="Refresh" @click="handleReset">Reset</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-
-    <el-card>
-      <template #header>
-        <div class="table-header">
-          <span>User list</span>
-          <div class="table-actions">
-            <el-text type="info"
-              >In total {{ tableData.length }} entries</el-text
-            >
-          </div>
-        </div>
-      </template>
-
-      <GTable
-        :columns="columns"
-        :data="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        selection
-        index
-        @selection-change="handleSelectionChange"
-        @page-change="handlePageChange"
-        @edit="handleEdit"
-        @delete="handleDelete"
-      >
-        <template #userInfo="{ row }">
-          <div class="user-cell">
-            <el-avatar :size="40" :src="row.avatar" class="user-avatar">
-              {{ row.username.charAt(0).toUpperCase() }}
-            </el-avatar>
-            <div class="user-info">
-              <div class="username">{{ row.username }}</div>
-              <div class="email">{{ row.email }}</div>
+    <!-- Statistics Cards -->
+    <el-row :gutter="20" class="stats-cards">
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card class="stat-card" shadow="hover">
+          <div class="stat-content">
+            <div class="stat-icon user-stat">
+              <el-icon><User /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">1,248</div>
+              <div class="stat-label">Total Users</div>
+              <div class="stat-trend trend-up">
+                <el-icon><TrendCharts /></el-icon>
+                <span>12.5%</span>
+              </div>
             </div>
           </div>
-        </template>
+        </el-card>
+      </el-col>
 
-        <template #role="{ row }">
-          <el-tag :type="getRoleType(row.role)">
-            {{ getRoleText(row.role) }}
-          </el-tag>
-        </template>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card class="stat-card" shadow="hover">
+          <div class="stat-content">
+            <div class="stat-icon order-stat">
+              <el-icon><ShoppingCart /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">3,456</div>
+              <div class="stat-label">Total Orders</div>
+              <div class="stat-trend trend-up">
+                <el-icon><TrendCharts /></el-icon>
+                <span>8.3%</span>
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
 
-        <template #createTime="{ row }">
-          {{ formatDate(row.createTime) }}
-        </template>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card class="stat-card" shadow="hover">
+          <div class="stat-content">
+            <div class="stat-icon revenue-stat">
+              <el-icon><Money /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">¥ 89,245</div>
+              <div class="stat-label">Total Revenue</div>
+              <div class="stat-trend trend-up">
+                <el-icon><TrendCharts /></el-icon>
+                <span>15.7%</span>
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
 
-        <template #status="{ row }">
-          <el-switch
-            v-model="row.status"
-            :active-value="'active'"
-            :inactive-value="'inactive'"
-            @change="handleStatusChange(row)"
-          />
-        </template>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card class="stat-card" shadow="hover">
+          <div class="stat-content">
+            <div class="stat-icon view-stat">
+              <el-icon><View /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">45.6K</div>
+              <div class="stat-label">Page Views</div>
+              <div class="stat-trend trend-down">
+                <el-icon><TrendCharts /></el-icon>
+                <span>3.2%</span>
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
-        <template #actions="{ row }">
-          <el-button size="small" :icon="Edit" @click="handleEdit(row)"
-            >Edit</el-button
-          >
-          <el-button
-            size="small"
-            :icon="Delete"
-            type="danger"
-            @click="handleDelete(row)"
-            >Delete</el-button
-          >
-        </template>
-      </GTable>
-    </el-card>
+    <!-- Charts Section -->
+    <el-row :gutter="20" class="charts-section">
+      <!-- Revenue Chart -->
+      <el-col :xs="24" :lg="16">
+        <el-card class="chart-card">
+          <template #header>
+            <div class="chart-header">
+              <span>Revenue Overview</span>
+              <el-radio-group v-model="chartDateRange" size="small">
+                <el-radio-button label="week">Week</el-radio-button>
+                <el-radio-button label="month">Month</el-radio-button>
+                <el-radio-button label="year">Year</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
+          <div class="chart-container">
+            <!-- Placeholder for chart - we'll use a mock chart visual -->
+            <div class="mock-chart">
+              <div class="chart-bars">
+                <div
+                  v-for="(item, index) in revenueData"
+                  :key="index"
+                  class="chart-bar"
+                  :style="{ height: (item.value / 5000) * 100 + '%' }"
+                >
+                  <div class="bar-value">¥{{ item.value }}</div>
+                </div>
+              </div>
+              <div class="chart-labels">
+                <div
+                  v-for="(item, index) in revenueData"
+                  :key="index"
+                  class="chart-label"
+                >
+                  {{ item.month }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <!-- User Analytics -->
+      <el-col :xs="24" :lg="8">
+        <el-card class="chart-card">
+          <template #header>
+            <span>User Analytics</span>
+          </template>
+          <div class="chart-container">
+            <div class="pie-chart-mock">
+              <div class="pie-segment new-users">
+                <div class="segment-label">New Users</div>
+                <div class="segment-value">65%</div>
+              </div>
+              <div class="pie-segment returning-users">
+                <div class="segment-label">Returning</div>
+                <div class="segment-value">35%</div>
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- Quick Actions & Recent Activity -->
+    <el-row :gutter="20" class="bottom-section">
+      <!-- Quick Actions -->
+      <el-col :xs="24" :lg="12">
+        <el-card class="action-card">
+          <template #header>
+            <span>Quick Actions</span>
+          </template>
+          <div class="quick-actions">
+            <el-button
+              v-for="action in quickActions"
+              :key="action.id"
+              :icon="action.icon"
+              class="action-button"
+              @click="handleQuickAction(action.id)"
+            >
+              {{ action.label }}
+            </el-button>
+          </div>
+        </el-card>
+      </el-col>
+
+      <!-- Recent Activity -->
+      <el-col :xs="24" :lg="12">
+        <el-card class="activity-card">
+          <template #header>
+            <span>Recent Activity</span>
+          </template>
+          <el-timeline>
+            <el-timeline-item
+              v-for="activity in recentActivities"
+              :key="activity.id"
+              :timestamp="activity.time"
+              :type="activity.type"
+            >
+              <div class="activity-item">
+                <div class="activity-content">
+                  <span class="activity-user">{{ activity.user }}</span>
+                  <span class="activity-action">{{ activity.action }}</span>
+                </div>
+                <el-tag
+                  v-if="activity.tag"
+                  :type="activity.tagType"
+                  size="small"
+                >
+                  {{ activity.tag }}
+                </el-tag>
+              </div>
+            </el-timeline-item>
+          </el-timeline>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive } from "vue";
 import { ElMessage } from "element-plus";
-import { Plus, Refresh, Search, Edit, Delete } from "@element-plus/icons-vue";
-import { addDialog, addConfirm } from "@/components/common/GDialog";
-import UserForm from "@/components/common/Form/UserForm.vue";
-import GTable from "@/components/common/GTable/GTable.vue";
+import {
+  Refresh,
+  Calendar,
+  User,
+  ShoppingCart,
+  Money,
+  View,
+  TrendCharts,
+  Plus,
+  Edit,
+  Download,
+  Upload,
+  Setting,
+} from "@element-plus/icons-vue";
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  avatar?: string;
-  role: string;
-  department: string;
-  phone: string;
-  createTime: string;
-  status: "active" | "inactive";
-}
+// Chart data
+const chartDateRange = ref("month");
+const revenueData = reactive([
+  { month: "Jan", value: 12500 },
+  { month: "Feb", value: 18900 },
+  { month: "Mar", value: 15600 },
+  { month: "Apr", value: 23400 },
+  { month: "May", value: 19800 },
+  { month: "Jun", value: 28700 },
+]);
 
-const columns = [
-  {
-    prop: "userInfo",
-    label: "User Info",
-    minWidth: 200,
-    slot: "userInfo",
-  },
-  {
-    prop: "role",
-    label: "Role",
-    width: 120,
-    slot: "role",
-  },
-  {
-    prop: "department",
-    label: "Department",
-    width: 150,
-  },
-  {
-    prop: "phone",
-    label: "Phone",
-    width: 150,
-  },
-  {
-    prop: "createTime",
-    label: "Create Time",
-    width: 180,
-    slot: "createTime",
-  },
-  {
-    prop: "status",
-    label: "Status",
-    width: 100,
-    slot: "status",
-  },
-];
+// Quick actions
+const quickActions = reactive([
+  { id: "add-user", label: "Add User", icon: Plus },
+  { id: "manage-users", label: "Manage Users", icon: User },
+  { id: "export-data", label: "Export Data", icon: Download },
+  { id: "import-data", label: "Import Data", icon: Upload },
+  { id: "system-settings", label: "Settings", icon: Setting },
+  { id: "edit-profile", label: "Edit Profile", icon: Edit },
+]);
 
-const searchForm = reactive({ username: "", role: "", status: "" });
-const tableData = ref<User[]>([]);
-const loading = ref(false);
-const pagination = reactive({ currentPage: 1, pageSize: 10, total: 0 });
+// Recent activities
+const recentActivities = reactive([
+  {
+    id: 1,
+    user: "John Doe",
+    action: "created a new user account",
+    time: "2024-01-20 14:30",
+    type: "primary",
+    tag: "User",
+    tagType: "success",
+  },
+  {
+    id: 2,
+    user: "Jane Smith",
+    action: "updated system settings",
+    time: "2024-01-20 13:15",
+    type: "warning",
+    tag: "System",
+    tagType: "warning",
+  },
+  {
+    id: 3,
+    user: "Mike Johnson",
+    action: "exported user data",
+    time: "2024-01-20 11:45",
+    type: "info",
+    tag: "Export",
+    tagType: "info",
+  },
+  {
+    id: 4,
+    user: "Sarah Wilson",
+    action: "processed 245 orders",
+    time: "2024-01-20 10:20",
+    type: "success",
+    tag: "Orders",
+    tagType: "success",
+  },
+]);
 
-onMounted(() => loadTableData());
+// Methods
+const refreshData = () => {
+  ElMessage.success("Data refreshed successfully");
+  // In real application, this would trigger API calls
+};
 
-const loadTableData = async () => {
-  loading.value = true;
-  try {
-    await new Promise((r) => setTimeout(r, 400));
-    tableData.value = [
-      {
-        id: "1",
-        username: "admin",
-        email: "admin@example.com",
-        role: "admin",
-        department: "tech",
-        phone: "13800138000",
-        createTime: "2024-01-15T10:30:00Z",
-        status: "active",
-      },
-      {
-        id: "2",
-        username: "zhangsan",
-        email: "zhangsan@example.com",
-        role: "editor",
-        department: "content",
-        phone: "13800138001",
-        createTime: "2024-01-16T14:20:00Z",
-        status: "active",
-      },
-      {
-        id: "3",
-        username: "lisi",
-        email: "lisi@example.com",
-        role: "viewer",
-        department: "maintain",
-        phone: "13800138002",
-        createTime: "2024-01-17T09:15:00Z",
-        status: "inactive",
-      },
-    ];
-    pagination.total = tableData.value.length;
-  } catch (e) {
-    ElMessage.error("Failed to load users");
-  } finally {
-    loading.value = false;
+const handleDateRange = () => {
+  ElMessage.info("Date range selector will be implemented");
+};
+
+const handleQuickAction = (actionId: string) => {
+  switch (actionId) {
+    case "add-user":
+      ElMessage.info("Navigate to add user page");
+      break;
+    case "manage-users":
+      ElMessage.info("Navigate to user management");
+      break;
+    case "export-data":
+      ElMessage.info("Export data functionality");
+      break;
+    case "import-data":
+      ElMessage.info("Import data functionality");
+      break;
+    case "system-settings":
+      ElMessage.info("Navigate to system settings");
+      break;
+    case "edit-profile":
+      ElMessage.info("Navigate to profile edit");
+      break;
   }
 };
-
-const handleSearch = () => {
-  pagination.currentPage = 1;
-  loadTableData();
-};
-const handleReset = () => {
-  Object.assign(searchForm, { username: "", role: "", status: "" });
-  handleSearch();
-};
-const refreshData = () => loadTableData();
-
-const handleSelectionChange = (selection: any[]) => {
-  console.log("Selected rows:", selection);
-};
-
-const handlePageChange = (newPagination: any) => {
-  Object.assign(pagination, newPagination);
-  loadTableData();
-};
-
-const handleAddUser = () => {
-  addDialog<{ username: string; email: string }>({
-    title: "Create User",
-    component: UserForm,
-    props: { mode: "create" },
-    width: 600,
-    modal: true,
-    closeOnClickModal: false,
-    callBack: (p) => {
-      if (p?.ok && p.data) {
-        ElMessage.success("Created: " + p.data.username);
-        loadTableData();
-      }
-    },
-  });
-};
-
-const handleEdit = (user: User) => {
-  addDialog<{ id?: string; username: string; email: string }>({
-    title: "Edit User",
-    component: UserForm,
-    props: { mode: "edit", initial: user },
-    width: 600,
-    modal: true,
-    closeOnClickModal: false,
-    callBack: (p) => {
-      if (p?.ok && p.data) {
-        ElMessage.success("Updated: " + p.data.username);
-        loadTableData();
-      }
-    },
-  });
-};
-
-const handleDelete = async (user: User) => {
-  const ok = await addConfirm({
-    title: "Confirm",
-    message: `Confirm to delete "${user.username}"? This action can't reverse.`,
-    confirmText: "Delete",
-    cancelText: "Cancel",
-  });
-  if (!ok) return;
-  await new Promise((r) => setTimeout(r, 300));
-  ElMessage.success("Deleted!");
-  loadTableData();
-};
-
-const handleStatusChange = async (user: User) => {
-  try {
-    await new Promise((r) => setTimeout(r, 300));
-    ElMessage.success(
-      `User ${user.status === "active" ? "Able" : "Disable"} successfully.`,
-    );
-  } catch (e) {
-    user.status = user.status === "active" ? "inactive" : "active";
-    ElMessage.error("Action Failed!");
-  }
-};
-
-const getRoleType = (role: string) =>
-  ({ admin: "danger", editor: "warning", viewer: "success" })[role] || "info";
-const getRoleText = (role: string) =>
-  ({ admin: "admin", editor: "editor", viewer: "viewer" })[role] || role;
-const formatDate = (s: string) => new Date(s).toLocaleString("en");
 </script>
 
 <style src="./index.css" scoped></style>
