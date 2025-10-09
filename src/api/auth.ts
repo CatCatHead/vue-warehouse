@@ -1,79 +1,24 @@
-import { ref } from "vue";
-import type { Ref } from "vue";
-import axios from "axios";
-import { ElMessage } from "element-plus";
+// Use English comments only
+const ACCESS_TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
 
-interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-interface LoginResponse {
-  accessToken: string;
-  user: UserInfo;
-}
-
-interface UserInfo {
-  username: string;
-  userID: string;
-  email: string;
-  roles: string[];
-}
-
-const user: Ref<UserInfo | null> = ref(null);
-const token: Ref<string | null> = ref(null);
-
-const initializeAuth = () => {
-  const savedToken = localStorage.getItem("accessToken");
-  if (savedToken) {
-    token.value = savedToken;
-    const savedUser = localStorage.getItem("userInfo");
-    if (savedUser) {
-      user.value = JSON.parse(savedUser);
-    }
-  }
+export const AuthStorage = {
+  getAccessToken(): string | null {
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
+  },
+  setAccessToken(token: string) {
+    if (token) localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    else localStorage.removeItem(ACCESS_TOKEN_KEY);
+  },
+  getRefreshToken(): string | null {
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
+  },
+  setRefreshToken(token: string) {
+    if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token);
+    else localStorage.removeItem(REFRESH_TOKEN_KEY);
+  },
+  clear() {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  },
 };
-
-initializeAuth();
-
-export const useAuth = () => {
-  const login = async (credentials: LoginRequest): Promise<boolean> => {
-    try {
-      const resp = await axios.post<LoginResponse>("/api/login", credentials);
-      const { accessToken, user: userInfo } = resp.data;
-
-      token.value = accessToken;
-      user.value = userInfo;
-
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("userInfo", JSON.stringify(userInfo));
-
-      return true;
-    } catch (error: any) {
-      ElMessage.error(error?.response?.data?.message ?? "Login Failed");
-      console.error("Login failed:", error);
-      return false;
-    }
-  };
-
-  const logout = () => {
-    token.value = null;
-    user.value = null;
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userInfo");
-  };
-
-  const checkAuth = (): boolean => {
-    return !!token.value;
-  };
-
-  return {
-    user,
-    token,
-    login,
-    logout,
-    checkAuth,
-  };
-};
-
-export default useAuth;

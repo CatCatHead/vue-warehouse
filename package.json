@@ -10,8 +10,13 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
+    "@vue/eslint-config-typescript": "^14.6.0",
     "axios": "^1.12.2",
+    "eslint": "^9.37.0",
+    "eslint-plugin-vue": "^10.5.0",
     "pinia": "^3.0.3",
+    "unplugin-auto-import": "^20.2.0",
+    "unplugin-vue-components": "^29.1.0",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1"
   },

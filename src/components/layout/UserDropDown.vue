@@ -23,8 +23,6 @@
             </div>
           </el-dropdown-item>
 
-          <el-dropdown-divider />
-
           <el-dropdown-item command="profile">
             <el-icon><User /></el-icon>
             <span>Personal profile</span>
@@ -34,8 +32,6 @@
             <el-icon><Setting /></el-icon>
             <span>Account setting</span>
           </el-dropdown-item>
-
-          <el-dropdown-divider />
 
           <el-dropdown-item command="logout" divided>
             <el-icon><SwitchButton /></el-icon>
