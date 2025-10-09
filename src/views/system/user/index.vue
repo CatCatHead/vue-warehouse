@@ -4,14 +4,14 @@
       <div class="header-left">
         <h1 class="page-title">User Management</h1>
         <el-text type="info"
-          >Manage all the user account it this system</el-text
+          >Manage all the user account in this system</el-text
         >
       </div>
       <div class="header-actions">
-        <el-button type="primary" :icon="Plus" @click="handleAddUser">
-          Add user
-        </el-button>
-        <el-button :icon="Refresh" @click="refreshData"> Refresh </el-button>
+        <el-button type="primary" :icon="Plus" @click="handleAddUser"
+          >Add user</el-button
+        >
+        <el-button :icon="Refresh" @click="refreshData">Refresh</el-button>
       </div>
     </div>
 
@@ -52,10 +52,10 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="handleSearch">
-            Search
-          </el-button>
-          <el-button :icon="Refresh" @click="handleReset"> Reset </el-button>
+          <el-button type="primary" :icon="Search" @click="handleSearch"
+            >Search</el-button
+          >
+          <el-button :icon="Refresh" @click="handleReset">Reset</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -97,20 +97,18 @@
 
         <el-table-column prop="role" label="role" width="120">
           <template #default="scope">
-            <el-tag :type="getRoleType(scope.row.role)">
-              {{ getRoleText(scope.row.role) }}
-            </el-tag>
+            <el-tag :type="getRoleType(scope.row.role)">{{
+              getRoleText(scope.row.role)
+            }}</el-tag>
           </template>
         </el-table-column>
 
         <el-table-column prop="department" label="department" width="150" />
-
         <el-table-column prop="phone" label="phone" width="150" />
-
         <el-table-column prop="createTime" label="createTime" width="180">
-          <template #default="scope">
-            {{ formatDate(scope.row.createTime) }}
-          </template>
+          <template #default="scope">{{
+            formatDate(scope.row.createTime)
+          }}</template>
         </el-table-column>
 
         <el-table-column prop="status" label="status" width="100">
@@ -126,17 +124,16 @@
 
         <el-table-column label="action" width="200" fixed="right">
           <template #default="scope">
-            <el-button size="small" :icon="Edit" @click="handleEdit(scope.row)">
-              Edit
-            </el-button>
+            <el-button size="small" :icon="Edit" @click="handleEdit(scope.row)"
+              >Edit</el-button
+            >
             <el-button
               size="small"
               :icon="Delete"
               type="danger"
               @click="handleDelete(scope.row)"
+              >Delete</el-button
             >
-              Delete
-            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -153,21 +150,19 @@
         />
       </div>
     </el-card>
-
-    <UserDialog
-      v-model="dialogVisible"
-      :user-data="currentUser"
-      :mode="dialogMode"
-      @success="handleDialogSuccess"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
+// Use English comments only
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Plus, Refresh, Search, Edit, Delete } from "@element-plus/icons-vue";
-import UserDialog from "@/views/system/user/componenets/UserDialog.vue";
+
+// Global dialog manager APIs
+import { addDialog, addConfirm } from "@/components/common/GDialog";
+// Reuse your existing form component (or create a new one)
+import UserForm from "@/components/common/Form/UserForm.vue";
 
 interface User {
   id: string;
@@ -181,34 +176,17 @@ interface User {
   status: "active" | "inactive";
 }
 
-const searchForm = reactive({
-  username: "",
-  role: "",
-  status: "",
-});
-
+const searchForm = reactive({ username: "", role: "", status: "" });
 const tableData = ref<User[]>([]);
 const loading = ref(false);
+const pagination = reactive({ currentPage: 1, pageSize: 10, total: 0 });
 
-const pagination = reactive({
-  currentPage: 1,
-  pageSize: 10,
-  total: 0,
-});
-
-const dialogVisible = ref(false);
-const dialogMode = ref<"add" | "edit">("add");
-const currentUser = ref<User | null>(null);
-
-onMounted(() => {
-  loadTableData();
-});
+onMounted(() => loadTableData());
 
 const loadTableData = async () => {
   loading.value = true;
   try {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
+    await new Promise((r) => setTimeout(r, 400));
     tableData.value = [
       {
         id: "1",
@@ -241,9 +219,8 @@ const loadTableData = async () => {
         status: "inactive",
       },
     ];
-
     pagination.total = tableData.value.length;
-  } catch (error) {
+  } catch (e) {
     ElMessage.error("Failed to load users");
   } finally {
     loading.value = false;
@@ -254,98 +231,88 @@ const handleSearch = () => {
   pagination.currentPage = 1;
   loadTableData();
 };
-
 const handleReset = () => {
-  Object.assign(searchForm, {
-    username: "",
-    role: "",
-    status: "",
-  });
+  Object.assign(searchForm, { username: "", role: "", status: "" });
   handleSearch();
 };
+const refreshData = () => loadTableData();
 
-const refreshData = () => {
-  loadTableData();
-};
-
+// Open "create" dialog via global dialog manager
 const handleAddUser = () => {
-  dialogMode.value = "add";
-  currentUser.value = null;
-  dialogVisible.value = true;
+  addDialog<{ username: string; email: string }>({
+    title: "Create User",
+    component: UserForm,
+    props: { mode: "create" },
+    width: 600,
+    modal: true,
+    closeOnClickModal: false,
+    callBack: (p) => {
+      if (p?.ok && p.data) {
+        ElMessage.success("Created: " + p.data.username);
+        loadTableData();
+      }
+    },
+  });
 };
 
+// Open "edit" dialog via global dialog manager
 const handleEdit = (user: User) => {
-  dialogMode.value = "edit";
-  currentUser.value = { ...user };
-  dialogVisible.value = true;
+  addDialog<{ id?: string; username: string; email: string }>({
+    title: "Edit User",
+    component: UserForm,
+    props: { mode: "edit", initial: user },
+    width: 600,
+    modal: true,
+    closeOnClickModal: false,
+    callBack: (p) => {
+      if (p?.ok && p.data) {
+        ElMessage.success("Updated: " + p.data.username);
+        loadTableData();
+      }
+    },
+  });
 };
 
 const handleDelete = async (user: User) => {
-  try {
-    await ElMessageBox.confirm(
-      `Confirm to delete "${user.username}"? This action can't reverse `,
-      "Confirm",
-      {
-        confirmButtonText: "Confirm",
-        cancelButtonText: "Cancel",
-        type: "warning",
-      },
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    ElMessage.success("Deleted!");
-    loadTableData();
-  } catch (error) {}
+  // Use addConfirm helper (no need for inline MessageBox unless you prefer it)
+  const ok = await addConfirm({
+    title: "Confirm",
+    message: `Confirm to delete "${user.username}"? This action can't reverse.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+  if (!ok) return;
+  await new Promise((r) => setTimeout(r, 300));
+  ElMessage.success("Deleted!");
+  loadTableData();
 };
 
 const handleStatusChange = async (user: User) => {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((r) => setTimeout(r, 300));
     ElMessage.success(
       `User ${user.status === "active" ? "Able" : "Disable"} successfully.`,
     );
-  } catch (error) {
+  } catch (e) {
     user.status = user.status === "active" ? "inactive" : "active";
     ElMessage.error("Action Failed!");
   }
-};
-
-const handleDialogSuccess = () => {
-  dialogVisible.value = false;
-  loadTableData();
 };
 
 const handleSizeChange = (size: number) => {
   pagination.pageSize = size;
   loadTableData();
 };
-
 const handleCurrentChange = (page: number) => {
   pagination.currentPage = page;
   loadTableData();
 };
 
-const getRoleType = (role: string) => {
-  const roleMap: { [key: string]: string } = {
-    admin: "danger",
-    editor: "warning",
-    viewer: "success",
-  };
-  return roleMap[role] || "info";
-};
-
-const getRoleText = (role: string) => {
-  const roleMap: { [key: string]: string } = {
-    admin: "admin",
-    editor: "editor",
-    viewer: "viewer",
-  };
-  return roleMap[role] || role;
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleString("en");
-};
+const getRoleType = (role: string) =>
+  ({ admin: "danger", editor: "warning", viewer: "success" })[role] || "info";
+const getRoleText = (role: string) =>
+  ({ admin: "admin", editor: "editor", viewer: "viewer" })[role] || role;
+const formatDate = (s: string) => new Date(s).toLocaleString("en");
 </script>
 
 <style src="./index.css" scoped></style>

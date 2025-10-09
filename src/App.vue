@@ -1,4 +1,5 @@
 <template>
+  <DialogHost />
   <router-view />
 </template>
 
@@ -6,7 +7,7 @@
 import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
-
+import { DialogHost } from "@/components/common/GDialog";
 const router = useRouter();
 const authStore = useAuthStore();
 

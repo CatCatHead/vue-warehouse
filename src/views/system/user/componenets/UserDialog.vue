@@ -73,7 +73,7 @@
       <div class="dialog-footer">
         <el-button @click="handleClose">Cancel</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="loading">
-          确认
+          Confirm
         </el-button>
       </div>
     </template>
