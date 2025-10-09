@@ -22,7 +22,7 @@ const routes = [
   },
   {
     path: "/",
-    component: () => import("@/layouts/BaseLayout.vue"),
+    component: () => import("@/layouts/AppLayout.vue"),
     meta: { requiresAuth: true },
     children: [
       {
