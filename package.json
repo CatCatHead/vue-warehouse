@@ -14,6 +14,7 @@
     "axios": "^1.12.2",
     "eslint": "^9.37.0",
     "eslint-plugin-vue": "^10.5.0",
+    "nprogress": "^0.2.0",
     "pinia": "^3.0.3",
     "unplugin-auto-import": "^20.2.0",
     "unplugin-vue-components": "^29.1.0",

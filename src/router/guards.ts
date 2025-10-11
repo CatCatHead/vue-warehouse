@@ -1,10 +1,14 @@
 //src/router/guards.ts
 import type { Router } from "vue-router";
 import { useAuthStore } from "@/store/auth";
+import NProgress from "nprogress";
+import "nprogress/nprogress.css";
 
 export const setupRouterGuards = (router: Router) => {
   router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
+
+    NProgress.start();
 
     console.log("Route navigate", from.path, "->", to.path);
 
@@ -40,4 +44,6 @@ export const setupRouterGuards = (router: Router) => {
 
     next();
   });
+
+  router.afterEach(() => NProgress.done());
 };
