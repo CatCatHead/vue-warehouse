@@ -49,6 +49,12 @@ const routes = [
         component: () => import("@/views/system/settings/Settings.vue"),
         meta: { title: "System settings" },
       },
+      {
+        path: "/trackingNumber",
+        name: "TrackingNumber",
+        component: () => import("@/views/Tracking/TrackingNumber.vue"),
+        meta: { title: "Tracking Number" },
+      },
     ],
   },
 ];

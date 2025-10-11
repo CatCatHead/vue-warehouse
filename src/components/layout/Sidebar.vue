@@ -31,6 +31,10 @@
           <el-icon><Setting /></el-icon>
           <span>System Setting</span>
         </el-menu-item>
+        <el-menu-item index="/trackingNumber">
+          <el-icon><InfoFilled /></el-icon>
+          <span>Tracking Number</span>
+        </el-menu-item>
       </el-sub-menu>
 
       <el-menu-item index="/about">

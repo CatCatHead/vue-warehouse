@@ -88,6 +88,7 @@
 
 <script setup lang="ts">
 import { Edit, Delete } from "@element-plus/icons-vue";
+import { computed } from "vue";
 
 interface TableColumn {
   prop: string;
