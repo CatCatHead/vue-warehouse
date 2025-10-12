@@ -8,6 +8,8 @@ import App from "./App.vue";
 import router from "./router";
 import { setupRouterGuards } from "@/router/guards.ts";
 
+import { hasPerm } from "@/directives/permission";
+
 const app = createApp(App);
 const pinia = createPinia();
 
@@ -23,6 +25,8 @@ import { useLayoutStore } from "@/store/layout";
 useLayoutStore();
 
 setupRouterGuards(router);
+
+app.directive("has-perm", hasPerm);
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component);

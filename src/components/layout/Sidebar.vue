@@ -41,6 +41,11 @@
         <el-icon><InfoFilled /></el-icon>
         <span>About</span>
       </el-menu-item>
+
+      <el-menu-item index="/permtest">
+        <el-icon><InfoFilled /></el-icon>
+        <span>Permission Test</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>

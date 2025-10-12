@@ -1,24 +1,22 @@
-// Use English comments only
-const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
+// src/api/auth.ts
+import { http } from "@/utils/request";
 
-export const AuthStorage = {
-  getAccessToken(): string | null {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
-  },
-  setAccessToken(token: string) {
-    if (token) localStorage.setItem(ACCESS_TOKEN_KEY, token);
-    else localStorage.removeItem(ACCESS_TOKEN_KEY);
-  },
-  getRefreshToken(): string | null {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
-  },
-  setRefreshToken(token: string) {
-    if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token);
-    else localStorage.removeItem(REFRESH_TOKEN_KEY);
-  },
-  clear() {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-  },
-};
+// NOTE: server should return { code, message, data: { accessToken, refreshToken } }
+export function loginApi(body: { username: string; password: string }) {
+  return http.post("/auth/login", body, {
+    headers: { Authorization: "no-auth" },
+  });
+}
+
+export function refreshApi(refreshToken: string) {
+  return http.post(
+    "/auth/refresh",
+    { refreshToken },
+    { headers: { Authorization: "no-auth" } },
+  );
+}
+
+export function getProfileApi() {
+  // server returns { code, message, data: { id, username, role, ... } }
+  return http.get("/auth/me");
+}

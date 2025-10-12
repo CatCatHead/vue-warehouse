@@ -1,5 +1,6 @@
 //src/router/index.ts
 import { createRouter, createWebHistory } from "vue-router";
+import { setupRouterGuards } from "@/router/guards";
 
 const routes = [
   {
@@ -55,6 +56,12 @@ const routes = [
         component: () => import("@/views/Tracking/TrackingNumber.vue"),
         meta: { title: "Tracking Number" },
       },
+      {
+        path: "/permtest",
+        name: "permtest",
+        component: () => import("@/views/permtest/test.vue"),
+        meta: { title: "Permission Test" },
+      },
     ],
   },
 ];
@@ -63,5 +70,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+
+setupRouterGuards(router);
 
 export default router;

@@ -1,125 +1,127 @@
+// src/store/auth.ts
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { AuthStorage } from "@/utils/auth";
 
 interface UserInfo {
   id: string;
   username: string;
-  email: string;
-  avatar?: string;
   role: string;
-  loginTime?: string;
+  email?: string;
+  avatar?: string;
 }
 
+const PERMS_KEY = "vaas-perms";
+const USER_KEY = "vaas-user-info";
+
 export const useAuthStore = defineStore("auth", () => {
+  // ---------- state ----------
   const user = ref<UserInfo | null>(null);
-  const accessToken = ref("");
-  const refreshToken = ref("");
   const isAuthenticated = ref(false);
+  const perms = ref<Set<string>>(new Set()); //
 
-  const initializeAuth = () => {
-    console.log("Initialized auth store...");
+  // ---------- lifecycle ----------
+  function init() {
+    isAuthenticated.value = !!AuthStorage.getAccessToken();
 
-    const savedAccessToken = AuthStorage.getAccessToken();
-    const savedRefreshToken = AuthStorage.getRefreshToken();
+    const savedUser = localStorage.getItem(USER_KEY);
+    if (savedUser) {
+      try {
+        user.value = JSON.parse(savedUser);
+      } catch {}
+    }
 
-    if (savedAccessToken) {
-      console.log("Detected access token, restore log status");
-      accessToken.value = savedAccessToken;
-      refreshToken.value = savedRefreshToken;
-      isAuthenticated.value = true;
-
-      const savedUser = localStorage.getItem("vaas-user-info");
-      if (savedUser) {
-        try {
-          user.value = JSON.parse(savedUser);
-        } catch (error) {
-          console.error("Failed to pull user info from localstorage:", error);
-        }
+    const savedPerms = localStorage.getItem(PERMS_KEY);
+    if (savedPerms) {
+      try {
+        perms.value = new Set(JSON.parse(savedPerms));
+      } catch {
+        perms.value = new Set();
       }
-    } else {
-      console.log("Can not find the token, user not logged in");
-      isAuthenticated.value = false;
     }
-  };
+  }
 
-  const login = async (
+  // ---------- actions ----------
+  async function login(
     username: string,
-    password: string,
-    rememberMe: boolean = false,
-  ): Promise<boolean> => {
-    try {
-      console.log("Login...", { username, rememberMe });
+    _password: string,
+    rememberMe = false,
+  ): Promise<boolean> {
+    const at = "mock-at-" + Date.now();
+    const rt = "mock-rt-" + Date.now();
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    const role = username === "admin" ? "admin" : "user";
+    const profile: UserInfo = {
+      id: "1",
+      username,
+      role,
+      email: `${username}@example.com`,
+    };
 
-      const mockAccessToken = "mock-access-token-" + Date.now();
-      const mockRefreshToken = "mock-refresh-token-" + Date.now();
-      const mockUser: UserInfo = {
-        id: "1",
-        username: username,
-        email: `${username}@example.com`,
-        avatar: "/src/assets/default-avatar.png",
-        role: "admin",
-        loginTime: new Date().toISOString(),
-      };
+    const list =
+      role === "admin"
+        ? ["user:add", "user:edit", "user:delete"]
+        : ["user:edit"];
 
-      console.log("Logon, updated user info:", mockUser);
+    AuthStorage.setTokens(at, rt, rememberMe);
+    localStorage.setItem(USER_KEY, JSON.stringify(profile));
+    localStorage.setItem(PERMS_KEY, JSON.stringify(list));
 
-      AuthStorage.setTokens(mockAccessToken, mockRefreshToken, rememberMe);
+    user.value = profile;
+    isAuthenticated.value = true;
+    perms.value = new Set(list);
 
-      localStorage.setItem("vaas-user-info", JSON.stringify(mockUser));
+    return true;
+  }
 
-      accessToken.value = mockAccessToken;
-      refreshToken.value = mockRefreshToken;
-      user.value = mockUser;
-      isAuthenticated.value = true;
+  async function logout(): Promise<void> {
+    AuthStorage.clearAuth();
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(PERMS_KEY);
+    user.value = null;
+    isAuthenticated.value = false;
+    perms.value = new Set();
+  }
 
-      console.log("Login successfully, Auth updated");
-      return true;
-    } catch (error) {
-      console.error("Login in Failed:", error);
-      return false;
-    }
-  };
-
-  const logout = async (): Promise<void> => {
-    try {
-      console.log("Logining out");
-
-      user.value = null;
-      accessToken.value = "";
-      refreshToken.value = "";
-      isAuthenticated.value = false;
-
-      AuthStorage.clearAuth();
-      localStorage.removeItem("vaas-user-info");
-
-      console.log("Log out successfully");
-    } catch (error) {
-      console.error("Failed to log out:", error);
-    }
-  };
-
-  const getDisplayName = () => {
+  // ---------- helpers ----------
+  function getDisplayName(): string {
     return user.value?.username || "User";
-  };
-
-  const getUserRole = () => {
+  }
+  function getUserRole(): string {
     return user.value?.role || "guest";
-  };
+  }
 
-  initializeAuth();
+  function hasPerm(required: string | string[]): boolean {
+    const need = Array.isArray(required) ? required : [required];
+    return need.some((p) => perms.value.has(p));
+  }
+  function setUser(patch: Partial<UserInfo>) {
+    if (!user.value) return;
+    user.value = { ...user.value, ...patch };
+    localStorage.setItem(USER_KEY, JSON.stringify(user.value));
+  }
+
+  const displayName = computed(getDisplayName);
+  const userRole = computed(getUserRole);
+
+  // bootstrap
+  init();
 
   return {
+    // state
     user,
-    accessToken,
-    refreshToken,
     isAuthenticated,
-
+    perms,
+    // actions
     login,
     logout,
+    setUser,
+    // helpers
     getDisplayName,
     getUserRole,
+    hasPerm,
+    // optional computed
+    displayName,
+    userRole,
   };
 });

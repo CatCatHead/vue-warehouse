@@ -1,3 +1,4 @@
+<!--src/layouts/Appout.vue-->
 <template>
   <el-container class="layout-container">
     <el-aside :width="asideWidth" class="sidebar">
