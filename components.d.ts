@@ -58,6 +58,7 @@ declare module 'vue' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     GTable: typeof import('./src/components/common/GTable/GTable.vue')['default']
     Header: typeof import('./src/components/layout/Header.vue')['default']
+    RealTimeStats: typeof import('./src/components/Dashboard/RealTimeStats.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sidebar: typeof import('./src/components/layout/Sidebar.vue')['default']
