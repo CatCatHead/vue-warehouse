@@ -13,7 +13,11 @@
     :close-on-click-modal="item.closeOnClickModal"
     :destroy-on-close="item.destroyOnClose"
     :z-index="item.zIndex"
+    :closable="item.closable ?? true"
+    :close-on-press-escape="item.closeOnPressEscape ?? true"
+    :class="item.customClass"
     @close="() => nativeClose(item.id)"
+    @keydown.esc="handleEscKey(item)"
   >
     <component
       :is="item.component"
@@ -42,6 +46,13 @@ import {
  * This way, dialogs opened on /users won't accidentally appear on /settings, etc.
  */
 const router = useRouter();
+
+// Handle ESC key for dialogs that allow it
+const handleEscKey = (item: any) => {
+  if (item.closeOnPressEscape !== false) {
+    nativeClose(item.id);
+  }
+};
 
 onMounted(() => {
   const currentPath = router.currentRoute.value.path;

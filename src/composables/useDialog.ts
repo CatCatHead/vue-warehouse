@@ -1,20 +1,38 @@
-// Use English comments only
 import { reactive } from "vue";
-import type { DialogItem, DialogPayload } from "@/types/dialog";
+import type { DialogItem, DialogPayload, DialogOptions } from "@/types/dialog";
 import ConfirmBody from "@/components/common/GDialog/ConfirmBody.vue";
 
-let seed = 0;
-function genId() {
-  seed += 1;
-  return `dlg_${Date.now()}_${seed}`;
+// Constants
+const MAX_DIALOGS = 20;
+
+// ID generation with better uniqueness
+function genId(): string {
+  return `dlg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
 export const dialogList = reactive<DialogItem<any>[]>([]);
 
 export function addDialog<T = any>(
-  item: Omit<DialogItem<T>, "id" | "visible" | "show">,
+  item: DialogOptions<T> & {
+    callBack?: (payload?: DialogPayload<T>) => void;
+  },
 ) {
+  // Prevent memory leaks by limiting maximum dialogs
+  if (dialogList.length >= MAX_DIALOGS) {
+    console.warn(
+      `Maximum dialog limit (${MAX_DIALOGS}) reached. Closing oldest dialog.`,
+    );
+    closeDialogById(dialogList[0].id);
+  }
+
   const id = genId();
+
+  // Prevent duplicate IDs (though very unlikely with the new ID generation)
+  if (dialogList.some((dialog) => dialog.id === id)) {
+    console.warn(`Dialog with id ${id} already exists`);
+    return id;
+  }
+
   const merged: DialogItem<T> = {
     id,
     title: "Dialog",
@@ -25,10 +43,13 @@ export function addDialog<T = any>(
     closeOnClickModal: false,
     destroyOnClose: true,
     zIndex: 2000,
+    closable: true,
+    closeOnPressEscape: true,
     show: true,
     visible: true,
     ...item,
   };
+
   dialogList.push(merged);
   return id;
 }
@@ -38,21 +59,48 @@ export function closeDialogById<T = any>(
   payload?: DialogPayload<T>,
   { isNativeClose = false }: { isNativeClose?: boolean } = {},
 ) {
-  const i = dialogList.findIndex((d) => d.id === id);
-  if (i === -1) return;
-  const item = dialogList[i] as DialogItem<T>;
+  const index = dialogList.findIndex((d) => d.id === id);
+  if (index === -1) return;
+
+  const item = dialogList[index] as DialogItem<T>;
   item.visible = false;
 
-  window.setTimeout(() => {
-    dialogList.splice(i, 1);
-    if (!isNativeClose) {
-      item.callBack?.(payload);
-    }
-  }, 300);
+  // Use double requestAnimationFrame for better timing with CSS transitions
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      dialogList.splice(index, 1);
+      if (!isNativeClose) {
+        item.callBack?.(payload);
+      }
+    });
+  });
 }
 
 export function nativeClose(id: string) {
   closeDialogById(id, undefined, { isNativeClose: true });
+}
+
+export function closeAllDialogs() {
+  // Close all dialogs with animation
+  dialogList.forEach((dialog) => {
+    dialog.visible = false;
+  });
+
+  // Remove all after animation
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      dialogList.length = 0;
+    });
+  });
+}
+
+export function closeDialogsByRoute(routePath: string) {
+  const dialogsToClose = dialogList.filter(
+    (dialog) => dialog.pathKey === routePath,
+  );
+  dialogsToClose.forEach((dialog) => {
+    closeDialogById(dialog.id);
+  });
 }
 
 export function addConfirm(opts: {
@@ -77,4 +125,14 @@ export function addConfirm(opts: {
       callBack: (p) => resolve(!!p?.ok),
     });
   });
+}
+
+// Utility function to get dialog by ID
+export function getDialogById(id: string): DialogItem<any> | undefined {
+  return dialogList.find((dialog) => dialog.id === id);
+}
+
+// Utility function to check if any dialogs are open
+export function hasOpenDialogs(): boolean {
+  return dialogList.length > 0;
 }

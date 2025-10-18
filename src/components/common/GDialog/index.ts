@@ -5,4 +5,8 @@ export {
   closeDialogById,
   nativeClose,
   addConfirm,
+  closeAllDialogs,
+  closeDialogsByRoute,
+  getDialogById,
+  hasOpenDialogs,
 } from "@/composables/useDialog";

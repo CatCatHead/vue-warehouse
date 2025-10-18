@@ -5,8 +5,7 @@ export interface DialogPayload<T = any> {
   data?: T;
 }
 
-export interface DialogItem<T = any> {
-  id: string;
+export interface DialogOptions<T = any> {
   title?: string;
   component: Component;
   props?: Record<string, any>;
@@ -16,9 +15,17 @@ export interface DialogItem<T = any> {
   modal?: boolean;
   closeOnClickModal?: boolean;
   destroyOnClose?: boolean;
+  zIndex?: number;
+  // New options
+  closable?: boolean; // Whether to show close button
+  closeOnPressEscape?: boolean; // Whether to close on ESC key
+  customClass?: string; // Custom CSS class
+}
+
+export interface DialogItem<T = any> extends DialogOptions<T> {
+  id: string;
   show: boolean;
   visible: boolean;
   pathKey?: string;
-  zIndex?: number;
   callBack?: (payload?: DialogPayload<T>) => void;
 }

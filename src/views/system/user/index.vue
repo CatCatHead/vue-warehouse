@@ -160,7 +160,11 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Plus, Refresh, Search, Edit, Delete } from "@element-plus/icons-vue";
 
 // Global dialog manager APIs
-import { addDialog, addConfirm } from "@/components/common/GDialog";
+import {
+  addDialog,
+  addConfirm,
+  closeDialogsByRoute,
+} from "@/components/common/GDialog";
 // Reuse your existing form component (or create a new one)
 import UserForm from "@/components/common/Form/UserForm.vue";
 
@@ -264,6 +268,9 @@ const handleEdit = (user: User) => {
     width: 600,
     modal: true,
     closeOnClickModal: false,
+    closable: true, //
+    closeOnPressEscape: false, //
+    customClass: "user-form-dialog", //
     callBack: (p) => {
       if (p?.ok && p.data) {
         ElMessage.success("Updated: " + p.data.username);
@@ -272,6 +279,12 @@ const handleEdit = (user: User) => {
     },
   });
 };
+
+import { onUnmounted } from "vue";
+import router from "@/router";
+onUnmounted(() => {
+  closeDialogsByRoute(router.currentRoute.value.path);
+});
 
 const handleDelete = async (user: User) => {
   // Use addConfirm helper (no need for inline MessageBox unless you prefer it)

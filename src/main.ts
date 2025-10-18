@@ -1,3 +1,4 @@
+// src/main.ts
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
@@ -16,7 +17,6 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(router);
 
-//Initialize them and sidebar status
 import { useThemeStore } from "@/store/theme";
 const themeStore = useThemeStore();
 themeStore.loadTheme();
