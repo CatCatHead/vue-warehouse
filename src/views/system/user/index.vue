@@ -1,26 +1,68 @@
 <template>
   <div class="users-page">
+    <!-- Page Header -->
     <div class="page-header">
       <div class="header-left">
         <h1 class="page-title">User Management</h1>
-        <el-text type="info"
-          >Manage all the user account in this system</el-text
-        >
+        <el-text type="info">Manage all user accounts in the system</el-text>
       </div>
       <div class="header-actions">
         <el-button type="primary" :icon="Plus" @click="handleAddUser"
-          >Add user</el-button
+          >Add User</el-button
         >
         <el-button :icon="Refresh" @click="refreshData">Refresh</el-button>
       </div>
     </div>
 
+    <!-- Batch Actions Bar -->
+    <div class="batch-actions" v-if="selectedUsers.length > 0">
+      <el-card class="batch-actions-card">
+        <div class="batch-content">
+          <div class="batch-info">
+            <el-icon><InfoFilled /></el-icon>
+            <span>Selected {{ selectedUsers.length }} user(s)</span>
+          </div>
+          <div class="batch-buttons">
+            <el-button
+              size="small"
+              :icon="Check"
+              @click="handleBatchAction('activate')"
+              :loading="batchLoading.activate"
+            >
+              Activate Selected
+            </el-button>
+            <el-button
+              size="small"
+              :icon="Close"
+              @click="handleBatchAction('deactivate')"
+              :loading="batchLoading.deactivate"
+            >
+              Deactivate Selected
+            </el-button>
+            <el-button
+              size="small"
+              type="danger"
+              :icon="Delete"
+              @click="handleBatchAction('delete')"
+              :loading="batchLoading.delete"
+            >
+              Delete Selected
+            </el-button>
+            <el-button size="small" link @click="clearSelection">
+              Clear Selection
+            </el-button>
+          </div>
+        </div>
+      </el-card>
+    </div>
+
+    <!-- Search Card -->
     <el-card class="search-card">
       <el-form :model="searchForm" inline>
         <el-form-item label="Username">
           <el-input
             v-model="searchForm.username"
-            placeholder="Input username"
+            placeholder="Enter username"
             clearable
             style="width: 200px"
           />
@@ -60,14 +102,13 @@
       </el-form>
     </el-card>
 
+    <!-- User Table -->
     <el-card>
       <template #header>
         <div class="table-header">
-          <span>User list</span>
+          <span>User List</span>
           <div class="table-actions">
-            <el-text type="info"
-              >In total {{ tableData.length }} entries</el-text
-            >
+            <el-text type="info">Total {{ tableData.length }} entries</el-text>
           </div>
         </div>
       </template>
@@ -78,10 +119,13 @@
         style="width: 100%"
         :border="true"
         stripe
+        @selection-change="handleSelectionChange"
       >
+        <!-- Selection Column -->
         <el-table-column type="selection" width="55" />
 
-        <el-table-column label="userInfo" min-width="200">
+        <!-- User Info Column -->
+        <el-table-column label="User Info" min-width="200">
           <template #default="scope">
             <div class="user-cell">
               <el-avatar :size="40" :src="scope.row.avatar" class="user-avatar">
@@ -95,7 +139,8 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="role" label="role" width="120">
+        <!-- Role Column -->
+        <el-table-column prop="role" label="Role" width="120">
           <template #default="scope">
             <el-tag :type="getRoleType(scope.row.role)">{{
               getRoleText(scope.row.role)
@@ -103,15 +148,18 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="department" label="department" width="150" />
-        <el-table-column prop="phone" label="phone" width="150" />
-        <el-table-column prop="createTime" label="createTime" width="180">
+        <el-table-column prop="department" label="Department" width="150" />
+        <el-table-column prop="phone" label="Phone" width="150" />
+
+        <!-- Create Time Column -->
+        <el-table-column prop="createTime" label="Create Time" width="180">
           <template #default="scope">{{
             formatDate(scope.row.createTime)
           }}</template>
         </el-table-column>
 
-        <el-table-column prop="status" label="status" width="100">
+        <!-- Status Column -->
+        <el-table-column prop="status" label="Status" width="100">
           <template #default="scope">
             <el-switch
               v-model="scope.row.status"
@@ -122,22 +170,25 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="action" width="200" fixed="right">
+        <!-- Actions Column -->
+        <el-table-column label="Actions" width="200" fixed="right">
           <template #default="scope">
-            <el-button size="small" :icon="Edit" @click="handleEdit(scope.row)"
-              >Edit</el-button
-            >
+            <el-button size="small" :icon="Edit" @click="handleEdit(scope.row)">
+              Edit
+            </el-button>
             <el-button
               size="small"
               :icon="Delete"
               type="danger"
               @click="handleDelete(scope.row)"
-              >Delete</el-button
             >
+              Delete
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
 
+      <!-- Pagination -->
       <div class="pagination-container">
         <el-pagination
           v-model:current-page="pagination.currentPage"
@@ -154,18 +205,22 @@
 </template>
 
 <script setup lang="ts">
-// Use English comments only
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Plus, Refresh, Search, Edit, Delete } from "@element-plus/icons-vue";
+import {
+  Plus,
+  Refresh,
+  Search,
+  Edit,
+  Delete,
+  Check,
+  Close,
+  InfoFilled,
+} from "@element-plus/icons-vue";
 
 // Global dialog manager APIs
-import {
-  addDialog,
-  addConfirm,
-  closeDialogsByRoute,
-} from "@/components/common/GDialog";
-// Reuse your existing form component (or create a new one)
+import { addDialog, addConfirm } from "@/components/common/GDialog";
+// Reuse your existing form component
 import UserForm from "@/components/common/Form/UserForm.vue";
 
 interface User {
@@ -180,68 +235,233 @@ interface User {
   status: "active" | "inactive";
 }
 
+// Reactive data
 const searchForm = reactive({ username: "", role: "", status: "" });
 const tableData = ref<User[]>([]);
+const selectedUsers = ref<User[]>([]);
 const loading = ref(false);
 const pagination = reactive({ currentPage: 1, pageSize: 10, total: 0 });
 
+// Batch operations loading states
+const batchLoading = reactive({
+  activate: false,
+  deactivate: false,
+  delete: false,
+});
+
+// Load table data on component mount
 onMounted(() => loadTableData());
 
+/**
+ * Load user data from API or mock
+ */
 const loadTableData = async () => {
   loading.value = true;
   try {
-    await new Promise((r) => setTimeout(r, 400));
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    // Mock data
     tableData.value = [
       {
         id: "1",
         username: "admin",
         email: "admin@example.com",
         role: "admin",
-        department: "tech",
+        department: "Technology",
         phone: "13800138000",
         createTime: "2024-01-15T10:30:00Z",
         status: "active",
       },
       {
         id: "2",
-        username: "zhangsan",
-        email: "zhangsan@example.com",
+        username: "john_doe",
+        email: "john.doe@example.com",
         role: "editor",
-        department: "content",
+        department: "Content",
         phone: "13800138001",
         createTime: "2024-01-16T14:20:00Z",
         status: "active",
       },
       {
         id: "3",
-        username: "lisi",
-        email: "lisi@example.com",
+        username: "jane_smith",
+        email: "jane.smith@example.com",
         role: "viewer",
-        department: "maintain",
+        department: "Marketing",
         phone: "13800138002",
         createTime: "2024-01-17T09:15:00Z",
         status: "inactive",
       },
+      {
+        id: "4",
+        username: "mike_wilson",
+        email: "mike.wilson@example.com",
+        role: "editor",
+        department: "Sales",
+        phone: "13800138003",
+        createTime: "2024-01-18T11:45:00Z",
+        status: "active",
+      },
     ];
+
     pagination.total = tableData.value.length;
-  } catch (e) {
-    ElMessage.error("Failed to load users");
+  } catch (error) {
+    console.error("Failed to load users:", error);
+    ElMessage.error("Failed to load user data");
   } finally {
     loading.value = false;
   }
 };
 
+/**
+ * Handle table selection change
+ */
+const handleSelectionChange = (selection: User[]) => {
+  selectedUsers.value = selection;
+};
+
+/**
+ * Clear all selections
+ */
+const clearSelection = () => {
+  selectedUsers.value = [];
+  // If you're using a table ref, you can also clear selection visually
+  // tableRef.value?.clearSelection();
+};
+
+/**
+ * Handle batch actions (activate, deactivate, delete)
+ */
+const handleBatchAction = async (
+  action: "activate" | "deactivate" | "delete",
+) => {
+  if (selectedUsers.value.length === 0) {
+    ElMessage.warning("Please select at least one user");
+    return;
+  }
+
+  const actionMap = {
+    activate: {
+      title: "Activate Users",
+      message: `Are you sure you want to activate ${selectedUsers.value.length} user(s)?`,
+      confirmText: "Activate",
+      loadingKey: "activate" as const,
+      successMessage: "Users activated successfully",
+    },
+    deactivate: {
+      title: "Deactivate Users",
+      message: `Are you sure you want to deactivate ${selectedUsers.value.length} user(s)?`,
+      confirmText: "Deactivate",
+      loadingKey: "deactivate" as const,
+      successMessage: "Users deactivated successfully",
+    },
+    delete: {
+      title: "Delete Users",
+      message: `Are you sure you want to delete ${selectedUsers.value.length} user(s)? This action cannot be undone.`,
+      confirmText: "Delete",
+      loadingKey: "delete" as const,
+      successMessage: "Users deleted successfully",
+    },
+  };
+
+  const config = actionMap[action];
+
+  try {
+    // Show confirmation dialog
+    const confirmed = await addConfirm({
+      title: config.title,
+      message: config.message,
+      confirmText: config.confirmText,
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) return;
+
+    // Set loading state
+    batchLoading[config.loadingKey] = true;
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Process the batch action
+    if (action === "delete") {
+      // Remove selected users from table data
+      const selectedIds = selectedUsers.value.map((user) => user.id);
+      tableData.value = tableData.value.filter(
+        (user) => !selectedIds.includes(user.id),
+      );
+    } else {
+      // Update status for selected users
+      const newStatus = action === "activate" ? "active" : "inactive";
+      const selectedIds = selectedUsers.value.map((user) => user.id);
+
+      tableData.value.forEach((user) => {
+        if (selectedIds.includes(user.id)) {
+          user.status = newStatus;
+        }
+      });
+    }
+
+    // Update total count if deleting
+    if (action === "delete") {
+      pagination.total = tableData.value.length;
+    }
+
+    // Show success message
+    ElMessage.success(config.successMessage);
+
+    // Clear selection
+    clearSelection();
+  } catch (error) {
+    console.error(`Batch ${action} failed:`, error);
+    ElMessage.error(`Failed to ${action} users`);
+  } finally {
+    batchLoading[config.loadingKey] = false;
+  }
+};
+
+/**
+ * Handle individual user status change
+ */
+const handleStatusChange = async (user: User) => {
+  try {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    const action = user.status === "active" ? "activated" : "deactivated";
+    ElMessage.success(`User ${action} successfully`);
+  } catch (error) {
+    // Revert the status change on error
+    user.status = user.status === "active" ? "inactive" : "active";
+    ElMessage.error("Failed to update user status");
+  }
+};
+
+/**
+ * Handle search
+ */
 const handleSearch = () => {
   pagination.currentPage = 1;
   loadTableData();
 };
+
+/**
+ * Handle reset search form
+ */
 const handleReset = () => {
   Object.assign(searchForm, { username: "", role: "", status: "" });
   handleSearch();
 };
+
+/**
+ * Refresh table data
+ */
 const refreshData = () => loadTableData();
 
-// Open "create" dialog via global dialog manager
+/**
+ * Open add user dialog
+ */
 const handleAddUser = () => {
   addDialog<{ username: string; email: string }>({
     title: "Create User",
@@ -250,16 +470,20 @@ const handleAddUser = () => {
     width: 600,
     modal: true,
     closeOnClickModal: false,
-    callBack: (p) => {
-      if (p?.ok && p.data) {
-        ElMessage.success("Created: " + p.data.username);
+    callBack: (payload) => {
+      if (payload?.ok && payload.data) {
+        ElMessage.success(
+          "User created successfully: " + payload.data.username,
+        );
         loadTableData();
       }
     },
   });
 };
 
-// Open "edit" dialog via global dialog manager
+/**
+ * Open edit user dialog
+ */
 const handleEdit = (user: User) => {
   addDialog<{ id?: string; username: string; email: string }>({
     title: "Edit User",
@@ -268,64 +492,83 @@ const handleEdit = (user: User) => {
     width: 600,
     modal: true,
     closeOnClickModal: false,
-    closable: true, //
-    closeOnPressEscape: false, //
-    customClass: "user-form-dialog", //
-    callBack: (p) => {
-      if (p?.ok && p.data) {
-        ElMessage.success("Updated: " + p.data.username);
+    callBack: (payload) => {
+      if (payload?.ok && payload.data) {
+        ElMessage.success(
+          "User updated successfully: " + payload.data.username,
+        );
         loadTableData();
       }
     },
   });
 };
 
-import { onUnmounted } from "vue";
-import router from "@/router";
-onUnmounted(() => {
-  closeDialogsByRoute(router.currentRoute.value.path);
-});
-
+/**
+ * Handle individual user deletion
+ */
 const handleDelete = async (user: User) => {
-  // Use addConfirm helper (no need for inline MessageBox unless you prefer it)
-  const ok = await addConfirm({
-    title: "Confirm",
-    message: `Confirm to delete "${user.username}"? This action can't reverse.`,
+  const confirmed = await addConfirm({
+    title: "Confirm Delete",
+    message: `Are you sure you want to delete user "${user.username}"? This action cannot be undone.`,
     confirmText: "Delete",
     cancelText: "Cancel",
   });
-  if (!ok) return;
-  await new Promise((r) => setTimeout(r, 300));
-  ElMessage.success("Deleted!");
-  loadTableData();
-};
 
-const handleStatusChange = async (user: User) => {
+  if (!confirmed) return;
+
   try {
-    await new Promise((r) => setTimeout(r, 300));
-    ElMessage.success(
-      `User ${user.status === "active" ? "Able" : "Disable"} successfully.`,
-    );
-  } catch (e) {
-    user.status = user.status === "active" ? "inactive" : "active";
-    ElMessage.error("Action Failed!");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    // Remove user from table data
+    tableData.value = tableData.value.filter((u) => u.id !== user.id);
+    pagination.total = tableData.value.length;
+
+    ElMessage.success("User deleted successfully");
+  } catch (error) {
+    ElMessage.error("Failed to delete user");
   }
 };
 
+/**
+ * Handle pagination size change
+ */
 const handleSizeChange = (size: number) => {
   pagination.pageSize = size;
   loadTableData();
 };
+
+/**
+ * Handle pagination page change
+ */
 const handleCurrentChange = (page: number) => {
   pagination.currentPage = page;
   loadTableData();
 };
 
+/**
+ * Get role type for tag styling
+ */
 const getRoleType = (role: string) =>
   ({ admin: "danger", editor: "warning", viewer: "success" })[role] || "info";
+
+/**
+ * Get display text for role
+ */
 const getRoleText = (role: string) =>
-  ({ admin: "admin", editor: "editor", viewer: "viewer" })[role] || role;
-const formatDate = (s: string) => new Date(s).toLocaleString("en");
+  ({ admin: "Admin", editor: "Editor", viewer: "Viewer" })[role] || role;
+
+/**
+ * Format date for display
+ */
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 </script>
 
 <style src="./index.css" scoped></style>

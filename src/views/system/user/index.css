@@ -21,6 +21,38 @@
     gap: 12px;
 }
 
+/* Batch Actions Styles */
+.batch-actions {
+    margin-bottom: 20px;
+}
+
+.batch-actions-card {
+    background-color: var(--el-color-primary-light-9);
+    border: 1px solid var(--el-color-primary-light-7);
+}
+
+.batch-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.batch-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--el-color-primary);
+    font-weight: 500;
+}
+
+.batch-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Search Card */
 .search-card {
     margin-bottom: 20px;
 }
@@ -58,4 +90,28 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .batch-content {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .batch-buttons {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .page-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 }
