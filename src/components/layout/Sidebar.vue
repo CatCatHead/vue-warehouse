@@ -46,6 +46,11 @@
         <el-icon><InfoFilled /></el-icon>
         <span>Permission Test</span>
       </el-menu-item>
+
+      <el-menu-item index="/echart">
+        <el-icon><PieChart /></el-icon>
+        <span>Echart</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>

@@ -5,10 +5,16 @@
 
 <script setup lang="ts">
 import { onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 import { DialogHost } from "@/components/common/GDialog";
+import { useRoutePreload } from "@/composables/useRoutePreload";
 
+const router = useRouter();
 const authStore = useAuthStore();
+
+// Enable intelligent route preloading
+useRoutePreload();
 
 onMounted(() => {
   console.log("App mounted, auth state:", {

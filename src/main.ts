@@ -1,9 +1,10 @@
-// src/main.ts
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
-import * as ElementPlusIconsVue from "@element-plus/icons-vue";
+
+// Import lazy loading styles
+import "@/styles/components/lazy-loading.css";
 
 import App from "./App.vue";
 import router from "./router";
@@ -17,6 +18,7 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(router);
 
+// Initialize theme and sidebar status
 import { useThemeStore } from "@/store/theme";
 const themeStore = useThemeStore();
 themeStore.loadTheme();
@@ -28,6 +30,8 @@ setupRouterGuards(router);
 
 app.directive("has-perm", hasPerm);
 
+// Import and register Element Plus icons
+import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component);
 }
