@@ -10,6 +10,13 @@
         <el-button type="primary" :icon="Plus" @click="handleAddUser"
           >Add User</el-button
         >
+        <el-button
+          :icon="Download"
+          @click="handleOpenExport"
+          :disabled="tableData.length === 0"
+        >
+          Export
+        </el-button>
         <el-button :icon="Refresh" @click="refreshData">Refresh</el-button>
       </div>
     </div>
@@ -48,6 +55,15 @@
             >
               Delete Selected
             </el-button>
+
+            <el-button
+              size="small"
+              :icon="Download"
+              @click="handleExportSelected"
+            >
+              Export Selected
+            </el-button>
+
             <el-button size="small" link @click="clearSelection">
               Clear Selection
             </el-button>
@@ -109,6 +125,14 @@
           <span>User List</span>
           <div class="table-actions">
             <el-text type="info">Total {{ tableData.length }} entries</el-text>
+            <el-button
+              size="small"
+              :icon="Download"
+              @click="handleQuickExport"
+              :disabled="tableData.length === 0"
+            >
+              Quick Export
+            </el-button>
           </div>
         </div>
       </template>
@@ -201,11 +225,21 @@
         />
       </div>
     </el-card>
+    <!-- Export Dialog -->
+    <ExportDialog
+      :visible="exportDialogVisible"
+      :data="tableData"
+      :selected-rows="selectedUsers"
+      :columns="exportColumns"
+      :default-filename="users"
+      @update:visible="exportDialogVisible = $event"
+      @export-complete="handleExportComplete"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
   Plus,
@@ -216,12 +250,98 @@ import {
   Check,
   Close,
   InfoFilled,
+  Download,
 } from "@element-plus/icons-vue";
 
 // Global dialog manager APIs
 import { addDialog, addConfirm } from "@/components/common/GDialog";
 // Reuse your existing form component
 import UserForm from "@/components/common/Form/UserForm.vue";
+
+// Import export functionality
+import ExportDialog from "@/components/common/ExportDialog/ExportDialog.vue";
+import type { ColumnDefinition } from "@/utils/export";
+import {
+  exportToCSV,
+  exportToExcel,
+  formatDateForExport,
+  formatStatusForExport,
+} from "@/utils/export";
+
+// Export dialog state
+const exportDialogVisible = ref(false);
+const tableRef = ref();
+
+// Export column definitions
+const exportColumns = computed<ColumnDefinition[]>(() => [
+  { key: "username", title: "Username", visible: true },
+  { key: "email", title: "Email", visible: true },
+  { key: "role", title: "Role", visible: true, formatter: getRoleText },
+  { key: "department", title: "Department", visible: true },
+  { key: "phone", title: "Phone", visible: true },
+  {
+    key: "createTime",
+    title: "Create Time",
+    visible: true,
+    formatter: formatDateForExport,
+  },
+  {
+    key: "status",
+    title: "Status",
+    visible: true,
+    formatter: formatStatusForExport,
+  },
+]);
+
+/**
+ * Open export dialog
+ */
+const handleOpenExport = () => {
+  exportDialogVisible.value = true;
+};
+
+/**
+ * Quick export without dialog
+ */
+const handleQuickExport = async () => {
+  try {
+    await exportToExcel(
+      tableData.value,
+      exportColumns.value,
+      "users_quick_export",
+    );
+    ElMessage.success("Users exported successfully");
+  } catch (error) {
+    console.error("Quick export failed:", error);
+    ElMessage.error("Failed to export users");
+  }
+};
+
+/**
+ * Export selected users only
+ */
+const handleExportSelected = () => {
+  if (selectedUsers.value.length === 0) {
+    ElMessage.warning("Please select users to export");
+    return;
+  }
+
+  try {
+    exportToExcel(selectedUsers.value, exportColumns.value, "users_selected");
+    ElMessage.success(`Exported ${selectedUsers.value.length} selected users`);
+  } catch (error) {
+    console.error("Selected users export failed:", error);
+    ElMessage.error("Failed to export selected users");
+  }
+};
+
+/**
+ * Handle export completion
+ */
+const handleExportComplete = () => {
+  // Optionally clear selection after export
+  // clearSelection()
+};
 
 interface User {
   id: string;

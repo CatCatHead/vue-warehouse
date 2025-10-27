@@ -10,6 +10,14 @@
         <el-button type="primary" :icon="Plus" @click="handleAddTracking"
           >Add Tracking</el-button
         >
+
+        <el-button
+          :icon="Download"
+          @click="handleOpenExport"
+          :disabled="tableData.length === 0"
+        >
+          Export
+        </el-button>
         <el-button :icon="Refresh" @click="refreshData">Refresh</el-button>
       </div>
     </div>
@@ -121,6 +129,15 @@
         </template>
       </GTable>
     </el-card>
+    <!-- Export Dialog -->
+    <ExportDialog
+      :visible="exportDialogVisible"
+      :data="tableData"
+      :columns="exportColumns"
+      :default-filename="tracking_numbers"
+      @update:visible="exportDialogVisible = $event"
+      @export-complete="handleExportComplete"
+    />
   </div>
 </template>
 
@@ -136,6 +153,46 @@ import {
   View,
 } from "@element-plus/icons-vue";
 import GTable from "@/components/common/GTable/GTable.vue";
+
+// Import export functionality
+import ExportDialog from "@/components/common/ExportDialog/ExportDialog.vue";
+import type { ColumnDefinition } from "@/utils/export";
+import { formatDateForExport } from "@/utils/export";
+
+// Export dialog state
+const exportDialogVisible = ref(false);
+
+// Export column definitions for tracking numbers
+const exportColumns = computed<ColumnDefinition[]>(() => [
+  { key: "trackingNumber", title: "Tracking Number", visible: true },
+  {
+    key: "carrierType",
+    title: "Carrier Type",
+    visible: true,
+    formatter: getCarrierText,
+  },
+  {
+    key: "createdAt",
+    title: "Created At",
+    visible: true,
+    formatter: formatDateForExport,
+  },
+  { key: "status", title: "Status", visible: true },
+]);
+
+/**
+ * Open export dialog
+ */
+const handleOpenExport = () => {
+  exportDialogVisible.value = true;
+};
+
+/**
+ * Handle export completion
+ */
+const handleExportComplete = () => {
+  // Optional cleanup
+};
 
 interface TrackingNumber {
   id: string;
