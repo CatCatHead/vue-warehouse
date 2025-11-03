@@ -8,7 +8,7 @@
       />
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item :to="{ path: '/' }">Dashboard</el-breadcrumb-item>
-        <el-breadcrumb-item>{{ currentPage }}</el-breadcrumb-item>
+        <el-breadcrumb-item>{{ currentPageTitle }}</el-breadcrumb-item>
       </el-breadcrumb>
 
       <GlobalSearch />
@@ -48,11 +48,6 @@ const tabsStore = useTabsStore();
 const themeStore = useThemeStore();
 const layoutStore = useLayoutStore();
 
-const currentPage = computed(() => {
-  const name = route.name?.toString() || "Dashboard";
-  return name;
-});
-
 const themeIcon = computed(() => (themeStore.isDark ? Sunny : Moon));
 
 const themeTooltip = computed(() =>
@@ -68,13 +63,41 @@ const toggleTheme = () => {
   themeStore.toggleTheme();
 };
 
+// ---------------------------Tab----------------------------
+const currentPageTitle = computed(() => {
+  // method 1: get the tab from the activated tab
+  const activeTab = tabsStore.tabs.find(
+    (tab) => tab.path === tabsStore.activeTab,
+  );
+  if (activeTab) {
+    return activeTab.title;
+  }
+  // method 2: get the tab from current route
+  if (route.meta?.title) {
+    return route.meta.title as string;
+  }
+
+  // method 3: get the tab from route's name
+  return route.name?.toString() || "Dashboard";
+});
+
+// listen to the routes' change
 watch(
-  () => route,
-  (newRoute) => {
-    tabsStore.addTab(newRoute);
+  () => route.path,
+  (newPath) => {
+    console.log("Route changed to:", newPath);
+
+    const existingTab = tabsStore.findTabByPath(newPath);
+    if (existingTab) {
+      tabsStore.setActiveTab(newPath);
+    } else if (route.name && route.meta?.title) {
+      tabsStore.addTab(route);
+    }
   },
-  { immediate: true, deep: true },
+  { immediate: true },
 );
+
+//-------------------Tab end--------------------
 </script>
 
 <style scoped>
