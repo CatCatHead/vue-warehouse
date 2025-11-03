@@ -1,3 +1,4 @@
+//src/store/tabs.ts
 import { defineStore } from "pinia";
 import { RouteLocationNormalized } from "vue-router";
 
@@ -52,6 +53,50 @@ export const useTabsStore = defineStore("tabs", {
 
     setActiveTab(path: string) {
       this.activeTab = path;
+    },
+    closeOtherTab(currentTab: string) {
+      this.tabs = this.tabs.filter(
+        (tab) =>
+          //only save current tab
+          tab.path === currentPath || tab.path === "/",
+      );
+      if (!this.tabs.some((tab) => tab.path === this.activeTab)) {
+        this.activeTab = currentTab;
+      }
+    },
+    closeLeftTabs(currentPath: string) {
+      const currentIndex = this.tabs.findIndex(
+        (tab) => tab.path === currentPath,
+      );
+      if (currentIndex > 0) {
+        this.tabs = this.tabs.slice(currentIndex);
+        if (!this.tabs.some((tab) => tab.path === this.activeTab)) {
+          this.activeTab = currentPath;
+        }
+      }
+    },
+    closeRightTabs(currentPath: string) {
+      const currentIndex = this.tabs.findIndex(
+        (tab) => tab.path === currentPath,
+      );
+      if (currentIndex < this.tabs.length - 1) {
+        this.tabs = this.tabs.slice(0, currentIndex + 1);
+        if (!this.tabs.some((tab) => tab.path === this.activeTab)) {
+          this.activeTab = currentPath;
+        }
+      }
+    },
+    closeAllTabs() {
+      const homeTab = this.tabs.find((tab) => tab.path === "/");
+      this.tabs = homeTab ? [homeTab] : [];
+      this.activeTab = homeTab ? homeTab.path : "";
+    },
+    reorderTabs(fromIndex: number, toIndex: number) {
+      const [movedTab] = this.tabs.splice(fromIndex, 1);
+      this.tabs.splice(toIndex, 0, movedTab);
+    },
+    getTabIndex(path: string): number {
+      return this.tabs.findIndex((tab) => tab.path === path);
     },
     //find the tab up to the route
     findTabByPath(path: string): TabItem | undefined {

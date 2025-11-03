@@ -1,3 +1,4 @@
+//src/router/index.ts
 import {
   createRouter,
   createWebHistory,
@@ -16,53 +17,53 @@ export const routes: RouteRecordRaw[] = [
     path: "/",
     name: "Root",
     component: () => lazyLoad(() => import("@/layouts/AppLayout.vue")),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, closeable: false },
     redirect: "/dashboard",
     children: [
       {
         path: "dashboard",
         name: "Dashboard",
         component: () => lazyLoad(() => import("@/views/dashboard/index.vue")),
-        meta: { title: "Dashboard", requiresAuth: true },
+        meta: { title: "Dashboard", requiresAuth: true, closeable: false },
       },
       {
         path: "users",
         name: "User",
         component: () =>
           lazyLoad(() => import("@/views/system/user/index.vue")),
-        meta: { title: "User Management", requiresAuth: true },
+        meta: { title: "User Management", requiresAuth: true, closeable: true },
       },
       {
         path: "settings",
         name: "SystemSettings",
         component: () =>
           lazyLoad(() => import("@/views/system/settings/Settings.vue")),
-        meta: { title: "System Settings", requiresAuth: true },
+        meta: { title: "System Settings", requiresAuth: true, closeable: true },
       },
       {
         path: "trackingNumber",
         name: "TrackingNumber",
         component: () =>
           lazyLoad(() => import("@/views/Tracking/TrackingNumber.vue")),
-        meta: { title: "Tracking Number", requiresAuth: true },
+        meta: { title: "Tracking Number", requiresAuth: true, closeable: true },
       },
       {
         path: "about",
         name: "About",
         component: () => lazyLoad(() => import("@/views/about/index.vue")),
-        meta: { title: "About", requiresAuth: true },
+        meta: { title: "About", requiresAuth: true, closeable: true },
       },
       {
         path: "permtest",
         name: "PermissionTest",
         component: () => lazyLoad(() => import("@/views/permtest/test.vue")),
-        meta: { title: "Permission Test", requiresAuth: true },
+        meta: { title: "Permission Test", requiresAuth: true, closeable: true },
       },
       {
         path: "echart",
         name: "Echart",
         component: () => lazyLoad(() => import("@/views/Echart/Echart.vue")),
-        meta: { title: "Echart", requiresAuth: true },
+        meta: { title: "Echart", requiresAuth: true, closeable: true },
       },
     ],
   },
