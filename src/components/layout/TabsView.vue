@@ -155,6 +155,7 @@ onMounted(() => {
   padding: 0 20px;
   border-bottom: 1px solid var(--el-border-color-light);
   overflow-x: auto;
+  height: 60px;
 }
 
 .tabs-container {
@@ -215,7 +216,6 @@ onMounted(() => {
   color: var(--el-color-primary);
 }
 
-/* 滚动条样式 */
 .tabs-view::-webkit-scrollbar {
   height: 4px;
 }
