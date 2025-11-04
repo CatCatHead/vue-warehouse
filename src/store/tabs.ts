@@ -58,7 +58,7 @@ export const useTabsStore = defineStore("tabs", {
       this.tabs = this.tabs.filter(
         (tab) =>
           //only save current tab
-          tab.path === currentPath || tab.path === "/",
+          tab.path === currentTab || tab.path === "/",
       );
       if (!this.tabs.some((tab) => tab.path === this.activeTab)) {
         this.activeTab = currentTab;

@@ -110,7 +110,7 @@ const handleCloseCurrent = () => {
 
 const handleCloseOthers = () => {
   console.log("Close other:", props.tabPath);
-  tabsStore.closeOtherTabs(props.tabPath);
+  tabsStore.closeOtherTab(props.tabPath);
   router.push(props.tabPath);
   closeMenu();
 };
