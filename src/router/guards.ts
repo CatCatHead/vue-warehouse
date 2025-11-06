@@ -2,6 +2,8 @@
 import type { Router } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 import { useTabsStore } from "@/store/tabs";
+import NProgress from "nprogress";
+import "nprogress/nprogress.css";
 
 export function setupRouterGuards(router: Router) {
   const WHITE = ["/login"];
@@ -10,6 +12,9 @@ export function setupRouterGuards(router: Router) {
     const auth = useAuthStore();
     const logged = auth.isAuthenticated;
     const tabsStore = useTabsStore();
+
+    NProgress.start();
+    NProgress.inc();
 
     console.log("Navigation to:", to.path, "Logged:", logged);
 
@@ -40,5 +45,6 @@ export function setupRouterGuards(router: Router) {
         tabsStore.setActiveTab(to.path);
       }
     }
+    NProgress.done();
   });
 }

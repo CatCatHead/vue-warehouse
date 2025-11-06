@@ -108,27 +108,7 @@
           </template>
           <div class="chart-container">
             <!-- Placeholder for chart - we'll use a mock chart visual -->
-            <div class="mock-chart">
-              <div class="chart-bars">
-                <div
-                  v-for="(item, index) in revenueData"
-                  :key="index"
-                  class="chart-bar"
-                  :style="{ height: (item.value / 5000) * 100 + '%' }"
-                >
-                  <div class="bar-value">¥{{ item.value }}</div>
-                </div>
-              </div>
-              <div class="chart-labels">
-                <div
-                  v-for="(item, index) in revenueData"
-                  :key="index"
-                  class="chart-label"
-                >
-                  {{ item.month }}
-                </div>
-              </div>
-            </div>
+            <Echart />
           </div>
         </el-card>
       </el-col>
@@ -228,6 +208,7 @@ import {
   Upload,
   Setting,
 } from "@element-plus/icons-vue";
+import Echart from "@/views/Echart/Echart.vue";
 
 // Chart data
 const chartDateRange = ref("month");
