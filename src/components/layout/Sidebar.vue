@@ -51,6 +51,11 @@
         <el-icon><PieChart /></el-icon>
         <span>Echart</span>
       </el-menu-item>
+
+      <el-menu-item index="/linens">
+        <el-icon><InfoFilled /></el-icon>
+        <span>Linens</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>
