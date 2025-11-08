@@ -78,6 +78,17 @@ export const routes: RouteRecordRaw[] = [
           lazyLoad(() => import("@/views/DeliveryList/DeliveryList.vue")),
         meta: { title: "DeliveryList", requiresAuth: true, closeable: true },
       },
+      {
+        path: "deliveryListUpload",
+        name: "DeliveryListUpload",
+        component: () =>
+          lazyLoad(() => import("@/views/DeliveryList/DeliveryListUpload.vue")),
+        meta: {
+          title: "DeliveryListUpload",
+          requiresAuth: true,
+          closeable: true,
+        },
+      },
     ],
   },
   {
