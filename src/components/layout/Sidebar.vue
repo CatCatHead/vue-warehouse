@@ -56,6 +56,11 @@
         <el-icon><InfoFilled /></el-icon>
         <span>Linens</span>
       </el-menu-item>
+
+      <el-menu-item index="/DeliveryList">
+        <el-icon><InfoFilled /></el-icon>
+        <span>Delivery List</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>
