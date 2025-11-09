@@ -307,6 +307,8 @@ import {
 // Components
 import GTable from "@/components/common/GTable/GTable.vue";
 import ExportDialog from "@/components/common/ExportDialog/ExportDialog.vue";
+import { config } from "@/utils/config";
+import { linenApi } from "@/api/linen";
 
 // Types
 interface LinenItem {
@@ -393,16 +395,6 @@ const columns = [
     sortable: true,
   },
   {
-    prop: "category",
-    label: "Category",
-    width: 150,
-  },
-  {
-    prop: "location",
-    label: "Location",
-    width: 150,
-  },
-  {
     prop: "status",
     label: "Status",
     width: 120,
@@ -468,10 +460,15 @@ onMounted(() => {
 const loadTableData = async () => {
   loading.value = true;
   try {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // const response = await http.get('/linen', {
+    //   page: pagination.currentPage,
+    //   size: pagination.pageSize,
+    //   ...searchForm
+    // });
+    // tableData.value = response.list;
+    // pagination.total = response.total;
 
-    // Mock data
+    await new Promise((resolve) => setTimeout(resolve, config.mockDelay));
     tableData.value = [
       {
         id: "1",
@@ -491,12 +488,12 @@ const loadTableData = async () => {
         itemId: "LIN-002",
         description: "Pillow Case - Standard",
         onHand: 120,
-        minStock: 100,
-        maxStock: 500,
+        minStock: 50,
+        maxStock: 300,
         category: "Bedding",
         location: "Warehouse B",
         status: "active",
-        lastUpdated: "2024-01-19T14:20:00Z",
+        lastUpdated: "2024-01-20T09:15:00Z",
         createdAt: "2024-01-10T14:20:00Z",
       },
       {
@@ -504,48 +501,56 @@ const loadTableData = async () => {
         itemId: "LIN-003",
         description: "Bath Towel - Large",
         onHand: 85,
-        minStock: 80,
-        maxStock: 300,
+        minStock: 40,
+        maxStock: 200,
         category: "Bath",
         location: "Warehouse A",
         status: "active",
-        lastUpdated: "2024-01-20T09:15:00Z",
-        createdAt: "2024-01-12T09:15:00Z",
-      },
-      {
-        id: "4",
-        itemId: "LIN-004",
-        description: "Hand Towel - Medium",
-        onHand: 35,
-        minStock: 50,
-        maxStock: 200,
-        category: "Bath",
-        location: "Warehouse C",
-        status: "low_stock",
-        lastUpdated: "2024-01-18T16:45:00Z",
-        createdAt: "2024-01-08T16:45:00Z",
-      },
-      {
-        id: "5",
-        itemId: "LIN-005",
-        description: "Bathrobe - Cotton",
-        onHand: 25,
-        minStock: 20,
-        maxStock: 100,
-        category: "Bath",
-        location: "Warehouse B",
-        status: "active",
-        lastUpdated: "2024-01-19T11:20:00Z",
-        createdAt: "2024-01-05T11:20:00Z",
+        lastUpdated: "2024-01-19T16:45:00Z",
+        createdAt: "2024-01-12T11:30:00Z",
       },
     ];
-
     pagination.total = tableData.value.length;
   } catch (error) {
     ElMessage.error("Failed to load linen items");
     console.error(error);
   } finally {
     loading.value = false;
+  }
+};
+
+const handleOperationSubmit = async () => {
+  if (operationForm.quantity <= 0) {
+    ElMessage.warning("Please enter a valid quantity");
+    return;
+  }
+
+  operationLoading.value = true;
+
+  try {
+    if (operationDialog.type === "inbound") {
+      await linenApi.inbound(
+        operationDialog.itemId,
+        operationForm.quantity,
+        operationForm.notes,
+      );
+    } else {
+      await linenApi.outbound(
+        operationDialog.itemId,
+        operationForm.quantity,
+        operationForm.notes,
+      );
+    }
+
+    ElMessage.success(
+      `${operationDialog.type === "inbound" ? "Inbound" : "Outbound"} operation completed successfully`,
+    );
+    handleOperationClose();
+    refreshData();
+  } catch (error) {
+    ElMessage.error("Operation failed. Please try again.");
+  } finally {
+    operationLoading.value = false;
   }
 };
 
@@ -668,50 +673,6 @@ const handleOperationClose = () => {
   operationDialog.itemId = "";
   operationDialog.description = "";
   operationDialog.currentStock = 0;
-};
-
-const handleOperationSubmit = async () => {
-  if (operationForm.quantity <= 0) {
-    ElMessage.warning("Please enter a valid quantity");
-    return;
-  }
-
-  operationLoading.value = true;
-
-  try {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Update the item in table data
-    const itemIndex = tableData.value.findIndex(
-      (item) => item.itemId === operationDialog.itemId,
-    );
-
-    if (itemIndex !== -1) {
-      if (operationDialog.type === "inbound") {
-        tableData.value[itemIndex].onHand += operationForm.quantity;
-      } else {
-        tableData.value[itemIndex].onHand -= operationForm.quantity;
-      }
-
-      // Update status based on new stock level
-      const newOnHand = tableData.value[itemIndex].onHand;
-      const minStock = tableData.value[itemIndex].minStock;
-
-      tableData.value[itemIndex].status =
-        newOnHand < minStock ? "low_stock" : "active";
-      tableData.value[itemIndex].lastUpdated = new Date().toISOString();
-    }
-
-    ElMessage.success(
-      `${operationDialog.type === "inbound" ? "Inbound" : "Outbound"} operation completed successfully`,
-    );
-    handleOperationClose();
-  } catch (error) {
-    ElMessage.error("Operation failed. Please try again.");
-  } finally {
-    operationLoading.value = false;
-  }
 };
 
 // Export methods

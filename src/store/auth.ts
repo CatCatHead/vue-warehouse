@@ -1,7 +1,8 @@
 // src/store/auth.ts
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue"; // 添加 onMounted
 import { AuthStorage } from "@/utils/auth";
+import { http } from "@/utils/request";
 
 interface UserInfo {
   id: string;
@@ -9,18 +10,17 @@ interface UserInfo {
   role: string;
   email?: string;
   avatar?: string;
+  permissions: string[];
 }
 
 const PERMS_KEY = "vaas-perms";
 const USER_KEY = "vaas-user-info";
 
 export const useAuthStore = defineStore("auth", () => {
-  // ---------- state ----------
   const user = ref<UserInfo | null>(null);
   const isAuthenticated = ref(false);
-  const perms = ref<Set<string>>(new Set()); //
+  const perms = ref<Set<string>>(new Set());
 
-  // ---------- lifecycle ----------
   function init() {
     isAuthenticated.value = !!AuthStorage.getAccessToken();
 
@@ -28,7 +28,9 @@ export const useAuthStore = defineStore("auth", () => {
     if (savedUser) {
       try {
         user.value = JSON.parse(savedUser);
-      } catch {}
+      } catch {
+        user.value = null;
+      }
     }
 
     const savedPerms = localStorage.getItem(PERMS_KEY);
@@ -41,52 +43,90 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  // ---------- actions ----------
   async function login(
     username: string,
-    _password: string,
+    password: string,
     rememberMe = false,
   ): Promise<boolean> {
-    const at = "mock-at-" + Date.now();
-    const rt = "mock-rt-" + Date.now();
+    try {
+      const response = await http.post("/auth/login", {
+        username,
+        password,
+        rememberMe,
+      });
 
-    const role = username === "admin" ? "admin" : "user";
-    const profile: UserInfo = {
-      id: "1",
-      username,
-      role,
-      email: `${username}@example.com`,
-    };
+      const { accessToken, refreshToken, user: userInfo } = response;
 
-    const list =
-      role === "admin"
-        ? ["user:add", "user:edit", "user:delete"]
-        : ["user:edit"];
+      AuthStorage.setTokens(accessToken, refreshToken, rememberMe);
+      localStorage.setItem(USER_KEY, JSON.stringify(userInfo));
+      localStorage.setItem(
+        PERMS_KEY,
+        JSON.stringify(userInfo.permissions || []),
+      );
 
-    AuthStorage.setTokens(at, rt, rememberMe);
-    localStorage.setItem(USER_KEY, JSON.stringify(profile));
-    localStorage.setItem(PERMS_KEY, JSON.stringify(list));
+      user.value = userInfo;
+      isAuthenticated.value = true;
+      perms.value = new Set(userInfo.permissions || []);
 
-    user.value = profile;
-    isAuthenticated.value = true;
-    perms.value = new Set(list);
+      return true;
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
+  }
 
-    return true;
+  async function refreshToken(): Promise<boolean> {
+    try {
+      const refreshToken = AuthStorage.getRefreshToken();
+      if (!refreshToken) return false;
+
+      const response = await http.post("/auth/refresh", { refreshToken });
+      const { accessToken, refreshToken: newRefreshToken } = response;
+
+      AuthStorage.setTokens(accessToken, newRefreshToken);
+      return true;
+    } catch (error) {
+      console.error("Refresh token failed:", error);
+      logout();
+      return false;
+    }
   }
 
   async function logout(): Promise<void> {
-    AuthStorage.clearAuth();
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(PERMS_KEY);
-    user.value = null;
-    isAuthenticated.value = false;
-    perms.value = new Set();
+    try {
+      await http.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout API call failed:", error);
+    } finally {
+      AuthStorage.clearAuth();
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(PERMS_KEY);
+      user.value = null;
+      isAuthenticated.value = false;
+      perms.value = new Set();
+    }
   }
 
-  // ---------- helpers ----------
+  async function fetchUserProfile(): Promise<void> {
+    try {
+      const userInfo = await http.get("/auth/me");
+      user.value = userInfo;
+      localStorage.setItem(USER_KEY, JSON.stringify(userInfo));
+
+      if (userInfo.permissions) {
+        perms.value = new Set(userInfo.permissions);
+        localStorage.setItem(PERMS_KEY, JSON.stringify(userInfo.permissions));
+      }
+    } catch (error) {
+      console.error("Fetch user profile failed:", error);
+      throw error;
+    }
+  }
+
   function getDisplayName(): string {
     return user.value?.username || "User";
   }
+
   function getUserRole(): string {
     return user.value?.role || "guest";
   }
@@ -95,6 +135,7 @@ export const useAuthStore = defineStore("auth", () => {
     const need = Array.isArray(required) ? required : [required];
     return need.some((p) => perms.value.has(p));
   }
+
   function setUser(patch: Partial<UserInfo>) {
     if (!user.value) return;
     user.value = { ...user.value, ...patch };
@@ -104,24 +145,24 @@ export const useAuthStore = defineStore("auth", () => {
   const displayName = computed(getDisplayName);
   const userRole = computed(getUserRole);
 
-  // bootstrap
-  init();
+  onMounted(() => {
+    init();
+  });
 
   return {
-    // state
     user,
     isAuthenticated,
     perms,
-    // actions
     login,
     logout,
+    refreshToken,
+    fetchUserProfile,
     setUser,
-    // helpers
     getDisplayName,
     getUserRole,
     hasPerm,
-    // optional computed
     displayName,
     userRole,
+    init,
   };
 });

@@ -1,15 +1,22 @@
 // src/composables/useErrorHandler.ts
 import { ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { useAuthStore } from "@/store/auth";
+import { useRouter } from "vue-router";
 
 export function useErrorHandler() {
   const error = ref<string | null>(null);
+  const authStore = useAuthStore();
+  const router = useRouter();
 
-  const handleError = (err: any, context = "Action") => {
-    console.error(`${context}fail:`, err);
+  const handleError = (err: any, context = "Operation") => {
+    console.error(`${context} failed:`, err);
 
-    let message = `${context}fail，try again`;
-    if (err?.message) {
+    let message = `${context} failed, please try again`;
+
+    if (err?.response?.data?.message) {
+      message = err.response.data.message;
+    } else if (err?.message) {
       message = err.message;
     } else if (typeof err === "string") {
       message = err;
@@ -20,12 +27,26 @@ export function useErrorHandler() {
   };
 
   const handleNetworkError = () => {
-    ElMessageBox.alert("Network error", "Internet connection failed", {
+    ElMessageBox.alert("Network connection error", "Network Error", {
       confirmButtonText: "Retry",
       callback: () => {
         window.location.reload();
       },
     });
+  };
+
+  const handleAuthError = () => {
+    ElMessageBox.alert(
+      "Authentication failed, please login again",
+      "Authentication Error",
+      {
+        confirmButtonText: "Login",
+        callback: () => {
+          authStore.logout();
+          router.push("/login");
+        },
+      },
+    );
   };
 
   const clearError = () => {
@@ -36,6 +57,7 @@ export function useErrorHandler() {
     error,
     handleError,
     handleNetworkError,
+    handleAuthError,
     clearError,
   };
 }

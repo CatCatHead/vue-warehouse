@@ -1,22 +1,49 @@
-// src/api/auth.ts
+// src/api/user.ts
 import { http } from "@/utils/request";
 
-// NOTE: server should return { code, message, data: { accessToken, refreshToken } }
-export function loginApi(body: { username: string; password: string }) {
-  return http.post("/auth/login", body, {
-    headers: { Authorization: "no-auth" },
-  });
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  department: string;
+  phone: string;
+  status: "active" | "inactive";
+  createTime: string;
+  avatar?: string;
 }
 
-export function refreshApi(refreshToken: string) {
-  return http.post(
-    "/auth/refresh",
-    { refreshToken },
-    { headers: { Authorization: "no-auth" } },
-  );
+export interface UserListResponse {
+  list: User[];
+  total: number;
+  page: number;
+  size: number;
 }
 
-export function getProfileApi() {
-  // server returns { code, message, data: { id, username, role, ... } }
-  return http.get("/auth/me");
-}
+export const userApi = {
+  getUsers(params: {
+    page?: number;
+    size?: number;
+    username?: string;
+    role?: string;
+    status?: string;
+  }): Promise<UserListResponse> {
+    return http.get("/users", { params });
+  },
+
+  createUser(user: Omit<User, "id" | "createTime">): Promise<User> {
+    return http.post("/users", user);
+  },
+
+  updateUser(id: string, user: Partial<User>): Promise<User> {
+    return http.put(`/users/${id}`, user);
+  },
+
+  deleteUser(id: string): Promise<void> {
+    return http.delete(`/users/${id}`);
+  },
+
+  batchDeleteUsers(ids: string[]): Promise<void> {
+    return http.post("/users/batch-delete", { ids });
+  },
+};

@@ -210,7 +210,6 @@ const handleExceed = (files: File[]) => {
 };
 
 const beforeUpload = (rawFile: UploadRawFile) => {
-  // 文件类型检查
   const allowedTypes = props.acceptTypes.split(",");
   const fileExtension = "." + rawFile.name.split(".").pop()?.toLowerCase();
 
@@ -273,20 +272,14 @@ const handleUpload = async () => {
   uploadedCount.value = 0;
 
   try {
-    for (const file of fileList.value) {
-      file.status = "uploading";
+    const files = fileList.value.map((file) => file.raw!);
 
-      for (let progress = 0; progress <= 100; progress += 10) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        file.percentage = progress;
-      }
-
-      file.status = "success";
-      uploadedCount.value++;
-    }
+    const responses = await uploadApi.uploadFiles(files, (progress) => {
+      console.log("Total progress:", progress);
+    });
 
     ElMessage.success(`Successfully uploaded ${fileList.value.length} file(s)`);
-    emit("upload-success", fileList.value);
+    emit("upload-success", responses);
   } catch (error) {
     ElMessage.error("Upload failed. Please try again.");
     emit("upload-error", error as Error);

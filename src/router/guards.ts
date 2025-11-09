@@ -2,21 +2,20 @@
 import type { Router } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 import { useTabsStore } from "@/store/tabs";
+import { AuthStorage } from "@/utils/auth";
+import { ElMessage } from "element-plus";
 import NProgress from "nprogress";
-import "nprogress/nprogress.css";
 
 export function setupRouterGuards(router: Router) {
   const WHITE = ["/login"];
 
   router.beforeEach(async (to, from, next) => {
-    const auth = useAuthStore();
-    const logged = auth.isAuthenticated;
-    const tabsStore = useTabsStore();
-
-    NProgress.start();
-    NProgress.inc();
+    const authStore = useAuthStore();
+    const logged = authStore.isAuthenticated;
 
     console.log("Navigation to:", to.path, "Logged:", logged);
+    NProgress.start();
+    NProgress.inc();
 
     if (WHITE.includes(to.path)) {
       if (logged && to.path === "/login") return next("/");
@@ -27,15 +26,26 @@ export function setupRouterGuards(router: Router) {
       return next({ path: "/login", query: { redirect: to.fullPath } });
     }
 
-    //make sure the tab refresh
-    if (logged && to.name && to.meta?.title) {
-      tabsStore.addTab(to);
+    if (logged && AuthStorage.isTokenExpiring()) {
+      try {
+        await authStore.refreshToken();
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        return next({ path: "/login", query: { redirect: to.fullPath } });
+      }
+    }
+
+    if (to.meta?.permissions) {
+      const hasPermission = authStore.hasPerm(to.meta.permissions);
+      if (!hasPermission) {
+        ElMessage.error("Access denied");
+        return next(from.path);
+      }
     }
 
     next();
   });
 
-  //
   router.afterEach((to) => {
     const tabsStore = useTabsStore();
     // tab actived
@@ -46,5 +56,10 @@ export function setupRouterGuards(router: Router) {
       }
     }
     NProgress.done();
+  });
+
+  router.onError((error) => {
+    console.error("Router error:", error);
+    ElMessage.error("Page loading failed");
   });
 }

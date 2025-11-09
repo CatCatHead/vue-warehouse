@@ -25,7 +25,22 @@ export const AuthStorage = {
   clearAuth() {
     localStorage.removeItem(ACCESS);
     localStorage.removeItem(REFRESH);
+    localStorage.removeItem(REMEMBER);
     sessionStorage.removeItem(ACCESS);
     sessionStorage.removeItem(REFRESH);
+  },
+
+  isTokenExpiring(): boolean {
+    const token = this.getAccessToken();
+    if (!token) return true;
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const exp = payload.exp * 1000;
+      const now = Date.now();
+      return exp - now < 5 * 60 * 1000;
+    } catch {
+      return true;
+    }
   },
 };

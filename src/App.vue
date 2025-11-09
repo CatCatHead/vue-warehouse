@@ -1,26 +1,40 @@
+<!-- src/App.vue -->
 <template>
-  <DialogHost />
-  <router-view />
+  <div id="app">
+    <MockBanner />
+
+    <DialogHost />
+    <router-view />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
-import { DialogHost } from "@/components/common/GDialog";
 import { useRoutePreload } from "@/composables/useRoutePreload";
+import { config, isMockMode } from "@/utils/config";
+import MockBanner from "@/components/common/Mock/MockBanner.vue";
+import DialogHost from "@/components/common/GDialog/DialogHost.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
+
+const mockBannerVisible = ref(true);
 
 // Enable intelligent route preloading
 useRoutePreload();
 
 onMounted(() => {
-  console.log("App mounted, auth state:", {
-    isAuthenticated: authStore.isAuthenticated,
-    accessToken: authStore.accessToken,
-  });
+  if (isMockMode) {
+    console.log("🚀 Vue Warehouse Admin - Running in Mock Mode");
+    console.log("📊 Mock Data: All operations are simulated");
+    console.log("🔗 Backend: Not connected (using mock adapter)");
+  } else {
+    console.log("🚀 Vue Warehouse Admin - Connected to Backend API");
+  }
+
+  document.title = config.appTitle;
 });
 </script>
 

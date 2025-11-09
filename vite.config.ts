@@ -26,14 +26,27 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      // Only for local dev to avoid CORS
+      port: 3000,
       proxy: {
-        // If you use /api as VITE_API_BASE during development
         "/api": {
-          target: "http://localhost:5173", // your backend (Spring Boot?) local port
+          target: "http://localhost:8080",
           changeOrigin: true,
-          // remove '/api' prefix before forwarding to backend
-          rewrite: (p) => p.replace(/^\/api/, ""),
+          secure: false,
+          rewrite: (path) => path,
+        },
+      },
+    },
+    build: {
+      outDir: "dist",
+      sourcemap: false,
+      chunkSizeWarningLimit: 1600,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            "element-plus": ["element-plus"],
+            echarts: ["echarts"],
+            vendor: ["lodash-es", "file-saver", "xlsx"],
+          },
         },
       },
     },
