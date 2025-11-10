@@ -18,7 +18,6 @@ app.use(router);
 
 import { useAuthStore } from "@/store/auth";
 const authStore = useAuthStore();
-authStore.init();
 
 import { useThemeStore } from "@/store/theme";
 const themeStore = useThemeStore();

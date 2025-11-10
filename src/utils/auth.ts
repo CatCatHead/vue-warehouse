@@ -35,10 +35,7 @@ export const AuthStorage = {
     if (!token) return true;
 
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const exp = payload.exp * 1000;
-      const now = Date.now();
-      return exp - now < 5 * 60 * 1000;
+      return false;
     } catch {
       return true;
     }

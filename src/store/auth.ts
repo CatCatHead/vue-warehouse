@@ -1,6 +1,6 @@
 // src/store/auth.ts
 import { defineStore } from "pinia";
-import { ref, computed, onMounted } from "vue"; // 添加 onMounted
+import { ref, computed } from "vue";
 import { AuthStorage } from "@/utils/auth";
 import { http } from "@/utils/request";
 
@@ -28,9 +28,7 @@ export const useAuthStore = defineStore("auth", () => {
     if (savedUser) {
       try {
         user.value = JSON.parse(savedUser);
-      } catch {
-        user.value = null;
-      }
+      } catch {}
     }
 
     const savedPerms = localStorage.getItem(PERMS_KEY);
@@ -55,18 +53,23 @@ export const useAuthStore = defineStore("auth", () => {
         rememberMe,
       });
 
+      console.log("Login response:", response);
+
       const { accessToken, refreshToken, user: userInfo } = response;
+
+      if (!accessToken || !userInfo) {
+        throw new Error("Invalid response from server");
+      }
 
       AuthStorage.setTokens(accessToken, refreshToken, rememberMe);
       localStorage.setItem(USER_KEY, JSON.stringify(userInfo));
-      localStorage.setItem(
-        PERMS_KEY,
-        JSON.stringify(userInfo.permissions || []),
-      );
+
+      const permissions = userInfo.permissions || [];
+      localStorage.setItem(PERMS_KEY, JSON.stringify(permissions));
 
       user.value = userInfo;
       isAuthenticated.value = true;
-      perms.value = new Set(userInfo.permissions || []);
+      perms.value = new Set(permissions);
 
       return true;
     } catch (error) {
@@ -87,7 +90,7 @@ export const useAuthStore = defineStore("auth", () => {
       return true;
     } catch (error) {
       console.error("Refresh token failed:", error);
-      logout();
+      this.logout();
       return false;
     }
   }
@@ -145,9 +148,7 @@ export const useAuthStore = defineStore("auth", () => {
   const displayName = computed(getDisplayName);
   const userRole = computed(getUserRole);
 
-  onMounted(() => {
-    init();
-  });
+  init();
 
   return {
     user,
@@ -163,6 +164,5 @@ export const useAuthStore = defineStore("auth", () => {
     hasPerm,
     displayName,
     userRole,
-    init,
   };
 });

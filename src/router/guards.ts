@@ -1,10 +1,9 @@
 // src/router/guards.ts
 import type { Router } from "vue-router";
 import { useAuthStore } from "@/store/auth";
-import { useTabsStore } from "@/store/tabs";
-import { AuthStorage } from "@/utils/auth";
 import { ElMessage } from "element-plus";
 import NProgress from "nprogress";
+import { useTabsStore } from "@/store/tabs";
 
 export function setupRouterGuards(router: Router) {
   const WHITE = ["/login"];
@@ -24,23 +23,6 @@ export function setupRouterGuards(router: Router) {
 
     if (to.meta?.requiresAuth && !logged) {
       return next({ path: "/login", query: { redirect: to.fullPath } });
-    }
-
-    if (logged && AuthStorage.isTokenExpiring()) {
-      try {
-        await authStore.refreshToken();
-      } catch (error) {
-        console.error("Token refresh failed:", error);
-        return next({ path: "/login", query: { redirect: to.fullPath } });
-      }
-    }
-
-    if (to.meta?.permissions) {
-      const hasPermission = authStore.hasPerm(to.meta.permissions);
-      if (!hasPermission) {
-        ElMessage.error("Access denied");
-        return next(from.path);
-      }
     }
 
     next();

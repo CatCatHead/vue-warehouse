@@ -1,41 +1,69 @@
 // src/utils/request.ts
-import { config, isMockMode } from "./config";
-import { mockAdapter } from "./mockAdapter";
+import { config } from "./config";
 import { ElMessage } from "element-plus";
 import { AuthStorage } from "./auth";
 
-const isRealApiRequest = (config: any) => {
-  if (config.data instanceof FormData) return true;
-  if (config.useMock === false) return false;
-  return isMockMode;
+const realApiRequest = async (requestConfig: any) => {
+  const { method, url, data, params } = requestConfig;
+
+  let fullUrl = `${config.apiBaseUrl}${url}`;
+
+  if (params && method?.toLowerCase() === "get") {
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null) {
+        queryParams.append(key, params[key]);
+      }
+    });
+    const queryString = queryParams.toString();
+    if (queryString) {
+      fullUrl += `?${queryString}`;
+    }
+  }
+
+  console.log(`[API] ${method?.toUpperCase()} ${fullUrl}`, { data, params });
+
+  const options: RequestInit = {
+    method: method?.toUpperCase(),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  const token = AuthStorage.getAccessToken();
+  if (token) {
+    (options.headers as any)["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (data && method?.toLowerCase() !== "get") {
+    options.body = JSON.stringify(data);
+  }
+
+  try {
+    const response = await fetch(fullUrl, options);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch {
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const responseData = await response.json();
+    return responseData;
+  } catch (error) {
+    console.error("API request failed:", error);
+    throw error;
+  }
 };
 
 export const http = {
   async request<T>(requestConfig: any): Promise<T> {
-    const useMock = isRealApiRequest(requestConfig);
-
-    try {
-      if (useMock) {
-        const response = await mockAdapter.request({
-          ...requestConfig,
-          mockDelay: config.mockDelay,
-        });
-        return response as T;
-      } else {
-        console.warn(
-          `[Real API] ${requestConfig.method?.toUpperCase()} ${requestConfig.url} - Backend not available, falling back to Mock`,
-        );
-
-        const response = await mockAdapter.request({
-          ...requestConfig,
-          mockDelay: config.mockDelay,
-        });
-        return response as T;
-      }
-    } catch (error) {
-      console.error("Request failed:", error);
-      throw error;
-    }
+    return (await realApiRequest(requestConfig)) as T;
   },
 
   get<T>(url: string, params?: any) {
@@ -74,20 +102,26 @@ export const http = {
     formData: FormData,
     onProgress?: (progress: number) => void,
   ): Promise<T> {
-    console.warn("File upload would use real API when backend is available");
+    const fullUrl = `${config.apiBaseUrl}${url}`;
+    const token = AuthStorage.getAccessToken();
 
-    if (onProgress) {
-      for (let progress = 0; progress <= 100; progress += 10) {
-        setTimeout(() => onProgress(progress), progress * 10);
+    const options: RequestInit = {
+      method: "POST",
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+      body: formData,
+    };
+
+    try {
+      const response = await fetch(fullUrl, options);
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.status}`);
       }
+      return (await response.json()) as T;
+    } catch (error) {
+      console.error("Upload failed:", error);
+      throw error;
     }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return {
-      id: "mock-file-" + Date.now(),
-      filename: "uploaded-file",
-      url: "https://example.com/mock-file",
-      size: formData.get("file")?.size || 0,
-    } as T;
   },
 };

@@ -1,8 +1,6 @@
 <!-- src/App.vue -->
 <template>
   <div id="app">
-    <MockBanner />
-
     <DialogHost />
     <router-view />
   </div>
@@ -14,13 +12,10 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 import { useRoutePreload } from "@/composables/useRoutePreload";
 import { config, isMockMode } from "@/utils/config";
-import MockBanner from "@/components/common/Mock/MockBanner.vue";
 import DialogHost from "@/components/common/GDialog/DialogHost.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
-
-const mockBannerVisible = ref(true);
 
 // Enable intelligent route preloading
 useRoutePreload();
