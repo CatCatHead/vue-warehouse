@@ -50,6 +50,19 @@ const realApiRequest = async (requestConfig: any) => {
       } catch {
         errorMessage = response.statusText || errorMessage;
       }
+
+      // Deal with the 401 error code
+      if (response.status === 401) {
+        ElMessage.error("Login failed. Session expired.");
+        // Clear local token
+        AuthStorage.clearAuth();
+        // Jump to login page
+        // router.push('/login');
+      } else {
+        // Display the error message from back-end
+        ElMessage.error(errorMessage);
+      }
+
       throw new Error(errorMessage);
     }
 
@@ -57,6 +70,13 @@ const realApiRequest = async (requestConfig: any) => {
     return responseData;
   } catch (error) {
     console.error("API request failed:", error);
+    // Give hint if there is something wrong regarding with internet
+    if (
+      error instanceof TypeError &&
+      error.message.includes("Failed to fetch")
+    ) {
+      ElMessage.error("Connect failed.");
+    }
     throw error;
   }
 };
@@ -116,6 +136,12 @@ export const http = {
     try {
       const response = await fetch(fullUrl, options);
       if (!response.ok) {
+        // 401 while uploading
+        if (response.status === 401) {
+          ElMessage.error("Login failed. Session expired.");
+          AuthStorage.clearAuth();
+          // router.push('/login');
+        }
         throw new Error(`Upload failed: ${response.status}`);
       }
       return (await response.json()) as T;
