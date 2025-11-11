@@ -3,41 +3,91 @@ const ACCESS = "access_token";
 const REFRESH = "refresh_token";
 const REMEMBER = "remember_me";
 
-const box = () =>
-  localStorage.getItem(REMEMBER) === "1" ? localStorage : sessionStorage;
-const other = () => (box() === localStorage ? sessionStorage : localStorage);
-
 export const AuthStorage = {
   getAccessToken(): string {
-    return box().getItem(ACCESS) || "";
+    const localToken = localStorage.getItem(ACCESS);
+    const sessionToken = sessionStorage.getItem(ACCESS);
+    const token = localToken || sessionToken || "";
+
+    console.log("🔐 Get Access Token:", {
+      fromLocalStorage: !!localToken,
+      fromSessionStorage: !!sessionToken,
+      rememberMe: localStorage.getItem(REMEMBER),
+      tokenExists: !!token,
+      tokenPreview: token ? `${token.substring(0, 10)}...` : "none",
+    });
+
+    return token;
   },
+
   getRefreshToken(): string {
-    return box().getItem(REFRESH) || "";
+    const localToken = localStorage.getItem(REFRESH);
+    const sessionToken = sessionStorage.getItem(REFRESH);
+    const token = localToken || sessionToken || "";
+
+    console.log("🔐 Get Refresh Token:", {
+      exists: !!token,
+    });
+
+    return token;
   },
+
   setTokens(access: string, refresh?: string, rememberMe = false) {
+    console.log("🔐 Setting Tokens:", {
+      rememberMe,
+      accessTokenLength: access.length,
+      refreshTokenLength: refresh?.length || 0,
+      accessPreview: access.substring(0, 10) + "...",
+    });
+
+    // clear old token
+    this.clearTokens();
+
+    // rememberMe storage area
+    const storage = rememberMe ? localStorage : sessionStorage;
+
+    console.log(
+      "🔐 Using storage:",
+      rememberMe ? "localStorage" : "sessionStorage",
+    );
+
+    storage.setItem(ACCESS, access);
+    if (refresh) {
+      storage.setItem(REFRESH, refresh);
+    }
+
+    // record user's choice
     localStorage.setItem(REMEMBER, rememberMe ? "1" : "0");
-    const b = box();
-    b.setItem(ACCESS, access);
-    if (refresh) b.setItem(REFRESH, refresh);
-    other().removeItem(ACCESS);
-    other().removeItem(REFRESH);
+
+    // 验证存储
+    const storedAccess = storage.getItem(ACCESS);
+    const storedRefresh = refresh ? storage.getItem(REFRESH) : null;
+
+    console.log("🔐 Storage verification:", {
+      accessStored: !!storedAccess,
+      refreshStored: !!storedRefresh,
+      storedAccessLength: storedAccess?.length,
+    });
   },
-  clearAuth() {
+
+  clearTokens() {
+    console.log("🔐 Clearing all tokens");
     localStorage.removeItem(ACCESS);
     localStorage.removeItem(REFRESH);
-    localStorage.removeItem(REMEMBER);
     sessionStorage.removeItem(ACCESS);
     sessionStorage.removeItem(REFRESH);
+    localStorage.removeItem(REMEMBER);
   },
 
-  isTokenExpiring(): boolean {
-    const token = this.getAccessToken();
-    if (!token) return true;
+  clearAuth() {
+    this.clearTokens();
+  },
 
-    try {
-      return false;
-    } catch {
-      return true;
-    }
+  isRememberMe(): boolean {
+    return localStorage.getItem(REMEMBER) === "1";
+  },
+
+  hasToken(): boolean {
+    return !!this.getAccessToken();
   },
 };

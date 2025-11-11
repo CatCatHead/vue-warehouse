@@ -241,6 +241,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { userApi, type User as ApiUser } from "@/api/user";
 import {
   Plus,
   Refresh,
@@ -343,17 +344,7 @@ const handleExportComplete = () => {
   // clearSelection()
 };
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  avatar?: string;
-  role: string;
-  department: string;
-  phone: string;
-  createTime: string;
-  status: "active" | "inactive";
-}
+type User = ApiUser;
 
 // Reactive data
 const searchForm = reactive({ username: "", role: "", status: "" });
@@ -378,54 +369,15 @@ onMounted(() => loadTableData());
 const loadTableData = async () => {
   loading.value = true;
   try {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    // Mock data
-    tableData.value = [
-      {
-        id: "1",
-        username: "admin",
-        email: "admin@example.com",
-        role: "admin",
-        department: "Technology",
-        phone: "13800138000",
-        createTime: "2024-01-15T10:30:00Z",
-        status: "active",
-      },
-      {
-        id: "2",
-        username: "john_doe",
-        email: "john.doe@example.com",
-        role: "editor",
-        department: "Content",
-        phone: "13800138001",
-        createTime: "2024-01-16T14:20:00Z",
-        status: "active",
-      },
-      {
-        id: "3",
-        username: "jane_smith",
-        email: "jane.smith@example.com",
-        role: "viewer",
-        department: "Marketing",
-        phone: "13800138002",
-        createTime: "2024-01-17T09:15:00Z",
-        status: "inactive",
-      },
-      {
-        id: "4",
-        username: "mike_wilson",
-        email: "mike.wilson@example.com",
-        role: "editor",
-        department: "Sales",
-        phone: "13800138003",
-        createTime: "2024-01-18T11:45:00Z",
-        status: "active",
-      },
-    ];
-
-    pagination.total = tableData.value.length;
+    const response = await userApi.getUserList({
+      page: pagination.currentPage,
+      size: pagination.pageSize,
+      username: searchForm.username || undefined,
+      role: searchForm.role || undefined,
+      status: searchForm.status || undefined,
+    });
+    tableData.value = Array.isArray(response.list) ? response.list : [];
+    pagination.total = response.total;
   } catch (error) {
     console.error("Failed to load users:", error);
     ElMessage.error("Failed to load user data");
@@ -485,75 +437,44 @@ const handleBatchAction = async (
     },
   };
 
-  const config = actionMap[action];
+  const ids = selectedUsers.value.map((u) => u.id);
 
   try {
-    // Show confirmation dialog
-    const confirmed = await addConfirm({
-      title: config.title,
-      message: config.message,
-      confirmText: config.confirmText,
-      cancelText: "Cancel",
-    });
-
+    const confirmed = await addConfirm(/* ... */);
     if (!confirmed) return;
 
-    // Set loading state
-    batchLoading[config.loadingKey] = true;
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Process the batch action
     if (action === "delete") {
-      // Remove selected users from table data
-      const selectedIds = selectedUsers.value.map((user) => user.id);
-      tableData.value = tableData.value.filter(
-        (user) => !selectedIds.includes(user.id),
-      );
+      await userApi.batchDeleteUsers(ids);
     } else {
-      // Update status for selected users
-      const newStatus = action === "activate" ? "active" : "inactive";
-      const selectedIds = selectedUsers.value.map((user) => user.id);
+      const newStatus: "active" | "inactive" =
+        action === "activate" ? "active" : "inactive";
 
-      tableData.value.forEach((user) => {
-        if (selectedIds.includes(user.id)) {
-          user.status = newStatus;
-        }
-      });
+      await Promise.all(
+        ids.map((id) => userApi.updateUser(id, { status: newStatus })),
+      );
     }
 
-    // Update total count if deleting
-    if (action === "delete") {
-      pagination.total = tableData.value.length;
-    }
-
-    // Show success message
     ElMessage.success(config.successMessage);
-
-    // Clear selection
     clearSelection();
-  } catch (error) {
-    console.error(`Batch ${action} failed:`, error);
+    await loadTableData();
+  } catch (e) {
+    console.error(e);
     ElMessage.error(`Failed to ${action} users`);
-  } finally {
-    batchLoading[config.loadingKey] = false;
   }
 };
 
 /**
  * Handle individual user status change
  */
-const handleStatusChange = async (user: User) => {
+const handleStatusChange = async (row: User) => {
+  const original = row.status;
   try {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const action = user.status === "active" ? "activated" : "deactivated";
+    await userApi.updateUser(row.id, { status: row.status });
+    const action = row.status === "active" ? "activated" : "deactivated";
     ElMessage.success(`User ${action} successfully`);
-  } catch (error) {
-    // Revert the status change on error
-    user.status = user.status === "active" ? "inactive" : "active";
+  } catch (e) {
+    console.error(e);
+    row.status = original;
     ElMessage.error("Failed to update user status");
   }
 };
@@ -583,19 +504,22 @@ const refreshData = () => loadTableData();
  * Open add user dialog
  */
 const handleAddUser = () => {
-  addDialog<{ username: string; email: string }>({
+  addDialog({
     title: "Create User",
     component: UserForm,
-    props: { mode: "create" },
+    props: { mode: "add" },
     width: 600,
-    modal: true,
     closeOnClickModal: false,
-    callBack: (payload) => {
-      if (payload?.ok && payload.data) {
-        ElMessage.success(
-          "User created successfully: " + payload.data.username,
-        );
-        loadTableData();
+    callBack: async (payload: any) => {
+      if (!payload?.ok || !payload.data) return;
+
+      try {
+        await userApi.createUser(payload.data);
+        ElMessage.success("User created successfully");
+        await loadTableData();
+      } catch (e) {
+        console.error(e);
+        ElMessage.error("Failed to create user");
       }
     },
   });
@@ -604,20 +528,22 @@ const handleAddUser = () => {
 /**
  * Open edit user dialog
  */
-const handleEdit = (user: User) => {
-  addDialog<{ id?: string; username: string; email: string }>({
+const handleEdit = (row: User) => {
+  addDialog({
     title: "Edit User",
     component: UserForm,
-    props: { mode: "edit", initial: user },
+    props: { mode: "edit", initial: row },
     width: 600,
-    modal: true,
     closeOnClickModal: false,
-    callBack: (payload) => {
-      if (payload?.ok && payload.data) {
-        ElMessage.success(
-          "User updated successfully: " + payload.data.username,
-        );
-        loadTableData();
+    callBack: async (payload: any) => {
+      if (!payload?.ok || !payload.data) return;
+      try {
+        await userApi.updateUser(row.id, payload.data);
+        ElMessage.success("User updated successfully");
+        await loadTableData();
+      } catch (e) {
+        console.error(e);
+        ElMessage.error("Failed to update user");
       }
     },
   });
@@ -626,25 +552,21 @@ const handleEdit = (user: User) => {
 /**
  * Handle individual user deletion
  */
-const handleDelete = async (user: User) => {
+const handleDelete = async (row: User) => {
   const confirmed = await addConfirm({
     title: "Confirm Delete",
-    message: `Are you sure you want to delete user "${user.username}"? This action cannot be undone.`,
+    message: `Delete user "${row.username}"? This action cannot be undone.`,
     confirmText: "Delete",
     cancelText: "Cancel",
   });
-
   if (!confirmed) return;
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Remove user from table data
-    tableData.value = tableData.value.filter((u) => u.id !== user.id);
-    pagination.total = tableData.value.length;
-
+    await userApi.deleteUser(row.id);
     ElMessage.success("User deleted successfully");
-  } catch (error) {
+    await loadTableData();
+  } catch (e) {
+    console.error(e);
     ElMessage.error("Failed to delete user");
   }
 };

@@ -10,21 +10,53 @@ export function setupRouterGuards(router: Router) {
 
   router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore();
-    const logged = authStore.isAuthenticated;
 
-    console.log("Navigation to:", to.path, "Logged:", logged);
+    console.log(
+      "Navigation to:",
+      to.path,
+      "Logged:",
+      authStore.isAuthenticated,
+      "Initialized:",
+      authStore.isInitialized,
+    );
     NProgress.start();
     NProgress.inc();
 
+    if (!authStore.isInitialized) {
+      console.log("Auth not initialized, waiting...");
+      try {
+        await authStore.initializeAuth();
+        console.log("Auth initialization completed in guard", {
+          isAuthenticated: authStore.isAuthenticated,
+          hasUser: !!authStore.user,
+        });
+      } catch (error) {
+        console.error("Auth initialization failed in guard:", error);
+      }
+    }
+
+    const logged = authStore.isAuthenticated;
+
+    //white list check
     if (WHITE.includes(to.path)) {
-      if (logged && to.path === "/login") return next("/");
+      if (logged && to.path === "/login") {
+        console.log("Already logged in, redirecting from login to home");
+        return next("/");
+      }
+      console.log("White list route access:", to.path);
       return next();
     }
 
+    //Pages need authorizes
     if (to.meta?.requiresAuth && !logged) {
-      return next({ path: "/login", query: { redirect: to.fullPath } });
+      console.log("Access denied, redirecting to login");
+      return next({
+        path: "/login",
+        query: { redirect: to.fullPath },
+      });
     }
 
+    console.log("Access granted to:", to.path);
     next();
   });
 

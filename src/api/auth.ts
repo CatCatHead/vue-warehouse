@@ -1,5 +1,6 @@
 // src/api/auth.ts
 import { http } from "@/utils/request";
+import { AuthStorage } from "@/utils/auth";
 
 export interface LoginUserInfo {
   id: string;
@@ -25,12 +26,29 @@ export interface RefreshResult {
 
 export const authApi = {
   // Login
-  login(username: string, password: string, rememberMe: boolean) {
-    return http.post<LoginResult>("/auth/login", {
+  async login(username: string, password: string, rememberMe = false) {
+    const response = await http.post<{
+      accessToken: string;
+      refreshToken: string;
+      tokenType: string;
+      expiresIn: number;
+      user: LoginUserInfo;
+    }>("/auth/login", {
       username,
       password,
       rememberMe,
     });
+
+    // save token
+    if (response.accessToken) {
+      AuthStorage.setTokens(
+        response.accessToken,
+        response.refreshToken,
+        rememberMe,
+      );
+    }
+
+    return response;
   },
 
   // refresh token

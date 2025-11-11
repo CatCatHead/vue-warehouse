@@ -3,6 +3,7 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
+import { useAuthStore } from "@/store/auth";
 
 import App from "./App.vue";
 import router from "./router";
@@ -17,7 +18,9 @@ app.use(pinia);
 app.use(router);
 
 import { useAuthStore } from "@/store/auth";
+//initialize
 const authStore = useAuthStore();
+await authStore.initializeAuth();
 
 import { useThemeStore } from "@/store/theme";
 const themeStore = useThemeStore();

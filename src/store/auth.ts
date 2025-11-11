@@ -17,27 +17,42 @@ const PERMS_KEY = "vaas-perms";
 const USER_KEY = "vaas-user-info";
 
 export const useAuthStore = defineStore("auth", () => {
-  const storedUser = (() => {
-    try {
-      const raw = localStorage.getItem(USER_KEY);
-      return raw ? (JSON.parse(raw) as LoginUserInfo) : null;
-    } catch {
-      return null;
-    }
-  })();
+  // Initialized status
+  const user = ref<LoginUserInfo | null>(null);
+  const isAuthenticated = ref(false);
+  const perms = ref<Set<string>>(new Set());
+  const isInitialized = ref(false); // add initialized status
 
-  const storedPerms = (() => {
+  // retrieve data from localStorage
+  function restoreFromStorage() {
     try {
-      const raw = localStorage.getItem(PERMS_KEY);
-      return raw ? (JSON.parse(raw) as string[]) : [];
-    } catch {
-      return [];
-    }
-  })();
+      const userRaw = localStorage.getItem(USER_KEY);
+      const permsRaw = localStorage.getItem(PERMS_KEY);
+      const hasToken = !!AuthStorage.getAccessToken();
 
-  const user = ref<LoginUserInfo | null>(storedUser);
-  const isAuthenticated = ref(!!AuthStorage.getAccessToken() && !!storedUser);
-  const perms = ref<Set<string>>(new Set(storedPerms));
+      if (userRaw && hasToken) {
+        user.value = JSON.parse(userRaw) as LoginUserInfo;
+        const permissions = JSON.parse(permsRaw || "[]") as string[];
+        perms.value = new Set(permissions);
+        isAuthenticated.value = true;
+      } else {
+        // clear status if without token and userinfo
+        clearAuthState();
+      }
+    } catch (error) {
+      console.error("Recover user status failed:", error);
+      clearAuthState();
+    }
+  }
+
+  // Clear status
+  function clearAuthState() {
+    user.value = null;
+    isAuthenticated.value = false;
+    perms.value = new Set();
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(PERMS_KEY);
+  }
 
   async function login(
     username: string,
@@ -48,6 +63,17 @@ export const useAuthStore = defineStore("auth", () => {
       const response = await authApi.login(username, password, rememberMe);
 
       console.log("Login response:", response);
+
+      if (!response.accessToken) {
+        throw new Error("Can't detect token");
+      }
+
+      const storedToken = AuthStorage.getAccessToken();
+      if (!storedToken) {
+        throw new Error("Token save failed");
+      }
+
+      console.log("Token stored successfully:", !!storedToken);
 
       user.value = response.user;
       isAuthenticated.value = true;
@@ -61,6 +87,8 @@ export const useAuthStore = defineStore("auth", () => {
       return true;
     } catch (error) {
       console.error("Login failed:", error);
+      AuthStorage.clearAuth();
+      clearAuthState();
       throw error;
     }
   }
@@ -68,40 +96,95 @@ export const useAuthStore = defineStore("auth", () => {
   async function refreshToken(): Promise<boolean> {
     try {
       const refreshToken = AuthStorage.getRefreshToken();
-      if (!refreshToken) return false;
+      if (!refreshToken) {
+        logout();
+        return false;
+      }
 
       const response = await authApi.refreshToken(refreshToken);
       AuthStorage.setTokens(response.accessToken, response.refreshToken, true);
       return true;
     } catch (error) {
       console.error("Refresh token failed:", error);
-      this.logout();
+      logout();
       return false;
     }
   }
 
   function logout() {
     AuthStorage.clearAuth();
-    user.value = null;
-    isAuthenticated.value = false;
-    perms.value = new Set();
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(PERMS_KEY);
+    clearAuthState();
+    isInitialized.value = true; // log out also clear the status
   }
 
-  async function fetchUserProfile(): Promise<void> {
+  async function fetchUserProfile(): Promise<boolean> {
     try {
       const profile = await authApi.getCurrentUser();
-      user.value = profile;
 
+      user.value = profile;
       const permissions = profile.permissions || [];
       perms.value = new Set(permissions);
+      isAuthenticated.value = true;
 
+      // update localStorage
       localStorage.setItem(USER_KEY, JSON.stringify(profile));
       localStorage.setItem(PERMS_KEY, JSON.stringify(permissions));
-    } catch (e) {
-      console.error("fetchUserProfile error:", e);
-      logout();
+
+      return true;
+    } catch (error: any) {
+      console.error("fetchUserProfile error:", error);
+
+      // 401
+      if (error.message?.includes("401") || error.response?.status === 401) {
+        logout();
+      } else {
+        // clear status
+        isAuthenticated.value = false;
+      }
+      return false;
+    }
+  }
+
+  async function initializeAuth(): Promise<void> {
+    if (isInitialized.value) return;
+
+    try {
+      const hasToken = !!AuthStorage.getAccessToken();
+      const hasUserData = !!localStorage.getItem(USER_KEY);
+
+      console.log("Initializing auth:", { hasToken, hasUserData });
+
+      if (hasToken) {
+        try {
+          const success = await fetchUserProfile();
+          if (success) {
+            console.log("Auth initialized with fresh user data");
+            return;
+          }
+        } catch (error) {
+          console.warn(
+            "Failed to fetch fresh user profile, using stored data:",
+            error,
+          );
+        }
+
+        if (hasUserData) {
+          restoreFromStorage();
+          console.log("Auth initialized with stored user data");
+        } else {
+          console.warn("No user data found, clearing auth");
+          clearAuthState();
+        }
+      } else {
+        console.log("No token found, clearing auth");
+        clearAuthState();
+      }
+    } catch (error) {
+      console.error("Auth initialization failed:", error);
+      clearAuthState();
+    } finally {
+      isInitialized.value = true;
+      console.log("Auth initialization completed");
     }
   }
 
@@ -121,16 +204,15 @@ export const useAuthStore = defineStore("auth", () => {
   function setUser(info: LoginUserInfo | null) {
     user.value = info;
     if (!info) {
-      localStorage.removeItem(USER_KEY);
-      perms.value = new Set();
-      localStorage.removeItem(PERMS_KEY);
-      isAuthenticated.value = false;
+      clearAuthState();
     } else {
-      localStorage.setItem(USER_KEY, JSON.stringify(info));
+      user.value = info;
       const permissions = info.permissions || [];
       perms.value = new Set(permissions);
-      localStorage.setItem(PERMS_KEY, JSON.stringify(permissions));
       isAuthenticated.value = true;
+
+      localStorage.setItem(USER_KEY, JSON.stringify(info));
+      localStorage.setItem(PERMS_KEY, JSON.stringify(permissions));
     }
   }
 
@@ -141,6 +223,7 @@ export const useAuthStore = defineStore("auth", () => {
     user,
     isAuthenticated,
     perms,
+    isInitialized,
     login,
     logout,
     refreshToken,
@@ -151,5 +234,7 @@ export const useAuthStore = defineStore("auth", () => {
     hasPerm,
     displayName,
     userRole,
+    initializeAuth,
+    restoreFromStorage,
   };
 });
