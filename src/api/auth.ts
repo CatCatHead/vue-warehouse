@@ -20,7 +20,32 @@ export interface UserListResponse {
   size: number;
 }
 
-export const userApi = {
+// Login
+
+export interface LoginUserInfo {
+  id: string;
+  username: string;
+  role: string;
+  email?: string;
+  avatar?: string;
+  permissions: string[];
+}
+
+export interface LoginResult {
+  accessToken: string;
+  refreshToken: string;
+  tokenType?: string;
+  expiresIn?: number;
+  user: LoginUserInfo;
+}
+
+export interface RefreshResult {
+  accessToken: string;
+  refreshToken: string;
+}
+//
+
+export const authApi = {
   getUsers(params: {
     page?: number;
     size?: number;
@@ -45,5 +70,24 @@ export const userApi = {
 
   batchDeleteUsers(ids: string[]): Promise<void> {
     return http.post("/users/batch-delete", { ids });
+  },
+  //login service part
+  login(username: string, password: string, remember: boolean) {
+    return http.post<LoginResult>("/auth/login", {
+      username,
+      password,
+      remember,
+    });
+  },
+  refreshToken(refreshToken: string) {
+    return http.post<RefreshResult>("/auth/refresh", {
+      refreshToken,
+    });
+  },
+  getCurrentUser() {
+    return http.get<LoginUserInfo>("/auth/me");
+  },
+  logout() {
+    return http.post<void>("/auth/logout");
   },
 };

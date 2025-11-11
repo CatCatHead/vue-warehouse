@@ -2,7 +2,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { AuthStorage } from "@/utils/auth";
-import { http } from "@/utils/request";
+import { authApi, type LoginUserInfo } from "@/api/auth";
 
 interface UserInfo {
   id: string;
@@ -17,29 +17,27 @@ const PERMS_KEY = "vaas-perms";
 const USER_KEY = "vaas-user-info";
 
 export const useAuthStore = defineStore("auth", () => {
-  const user = ref<UserInfo | null>(null);
-  const isAuthenticated = ref(false);
-  const perms = ref<Set<string>>(new Set());
-
-  function init() {
-    isAuthenticated.value = !!AuthStorage.getAccessToken();
-
-    const savedUser = localStorage.getItem(USER_KEY);
-    if (savedUser) {
-      try {
-        user.value = JSON.parse(savedUser);
-      } catch {}
+  const storedUser = (() => {
+    try {
+      const raw = localStorage.getItem(USER_KEY);
+      return raw ? (JSON.parse(raw) as LoginUserInfo) : null;
+    } catch {
+      return null;
     }
+  })();
 
-    const savedPerms = localStorage.getItem(PERMS_KEY);
-    if (savedPerms) {
-      try {
-        perms.value = new Set(JSON.parse(savedPerms));
-      } catch {
-        perms.value = new Set();
-      }
+  const storedPerms = (() => {
+    try {
+      const raw = localStorage.getItem(PERMS_KEY);
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
     }
-  }
+  })();
+
+  const user = ref<LoginUserInfo | null>(storedUser);
+  const isAuthenticated = ref(!!AuthStorage.getAccessToken() && !!storedUser);
+  const perms = ref<Set<string>>(new Set(storedPerms));
 
   async function login(
     username: string,
@@ -47,29 +45,18 @@ export const useAuthStore = defineStore("auth", () => {
     rememberMe = false,
   ): Promise<boolean> {
     try {
-      const response = await http.post("/auth/login", {
-        username,
-        password,
-        rememberMe,
-      });
+      const response = await authApi.login(username, password, rememberMe);
 
       console.log("Login response:", response);
 
-      const { accessToken, refreshToken, user: userInfo } = response;
-
-      if (!accessToken || !userInfo) {
-        throw new Error("Invalid response from server");
-      }
-
-      AuthStorage.setTokens(accessToken, refreshToken, rememberMe);
-      localStorage.setItem(USER_KEY, JSON.stringify(userInfo));
-
-      const permissions = userInfo.permissions || [];
-      localStorage.setItem(PERMS_KEY, JSON.stringify(permissions));
-
-      user.value = userInfo;
+      user.value = response.user;
       isAuthenticated.value = true;
+
+      const permissions = response.user.permissions || [];
       perms.value = new Set(permissions);
+
+      localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+      localStorage.setItem(PERMS_KEY, JSON.stringify(permissions));
 
       return true;
     } catch (error) {
@@ -83,10 +70,8 @@ export const useAuthStore = defineStore("auth", () => {
       const refreshToken = AuthStorage.getRefreshToken();
       if (!refreshToken) return false;
 
-      const response = await http.post("/auth/refresh", { refreshToken });
-      const { accessToken, refreshToken: newRefreshToken } = response;
-
-      AuthStorage.setTokens(accessToken, newRefreshToken);
+      const response = await authApi.refreshToken(refreshToken);
+      AuthStorage.setTokens(response.accessToken, response.refreshToken, true);
       return true;
     } catch (error) {
       console.error("Refresh token failed:", error);
@@ -95,34 +80,28 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  async function logout(): Promise<void> {
-    try {
-      await http.post("/auth/logout");
-    } catch (error) {
-      console.error("Logout API call failed:", error);
-    } finally {
-      AuthStorage.clearAuth();
-      localStorage.removeItem(USER_KEY);
-      localStorage.removeItem(PERMS_KEY);
-      user.value = null;
-      isAuthenticated.value = false;
-      perms.value = new Set();
-    }
+  function logout() {
+    AuthStorage.clearAuth();
+    user.value = null;
+    isAuthenticated.value = false;
+    perms.value = new Set();
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(PERMS_KEY);
   }
 
   async function fetchUserProfile(): Promise<void> {
     try {
-      const userInfo = await http.get("/auth/me");
-      user.value = userInfo;
-      localStorage.setItem(USER_KEY, JSON.stringify(userInfo));
+      const profile = await authApi.getCurrentUser();
+      user.value = profile;
 
-      if (userInfo.permissions) {
-        perms.value = new Set(userInfo.permissions);
-        localStorage.setItem(PERMS_KEY, JSON.stringify(userInfo.permissions));
-      }
-    } catch (error) {
-      console.error("Fetch user profile failed:", error);
-      throw error;
+      const permissions = profile.permissions || [];
+      perms.value = new Set(permissions);
+
+      localStorage.setItem(USER_KEY, JSON.stringify(profile));
+      localStorage.setItem(PERMS_KEY, JSON.stringify(permissions));
+    } catch (e) {
+      console.error("fetchUserProfile error:", e);
+      logout();
     }
   }
 
@@ -139,16 +118,24 @@ export const useAuthStore = defineStore("auth", () => {
     return need.some((p) => perms.value.has(p));
   }
 
-  function setUser(patch: Partial<UserInfo>) {
-    if (!user.value) return;
-    user.value = { ...user.value, ...patch };
-    localStorage.setItem(USER_KEY, JSON.stringify(user.value));
+  function setUser(info: LoginUserInfo | null) {
+    user.value = info;
+    if (!info) {
+      localStorage.removeItem(USER_KEY);
+      perms.value = new Set();
+      localStorage.removeItem(PERMS_KEY);
+      isAuthenticated.value = false;
+    } else {
+      localStorage.setItem(USER_KEY, JSON.stringify(info));
+      const permissions = info.permissions || [];
+      perms.value = new Set(permissions);
+      localStorage.setItem(PERMS_KEY, JSON.stringify(permissions));
+      isAuthenticated.value = true;
+    }
   }
 
   const displayName = computed(getDisplayName);
   const userRole = computed(getUserRole);
-
-  init();
 
   return {
     user,
