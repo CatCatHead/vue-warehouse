@@ -97,6 +97,27 @@
           </el-select>
         </el-form-item>
 
+        <el-form-item label="Department">
+          <el-input
+            v-model="searchForm.department"
+            placeholder="Enter department"
+            clearable
+            style="width: 180px"
+          />
+        </el-form-item>
+
+        <el-form-item label="Create Time">
+          <el-date-picker
+            v-model="searchForm.createTimeRange"
+            type="daterange"
+            range-separator="To"
+            start-placeholder="Start date"
+            end-placeholder="End date"
+            value-format="YYYY-MM-DD"
+            style="width: 240px"
+          />
+        </el-form-item>
+
         <el-form-item label="Status">
           <el-select
             v-model="searchForm.status"
@@ -347,7 +368,13 @@ const handleExportComplete = () => {
 type User = ApiUser;
 
 // Reactive data
-const searchForm = reactive({ username: "", role: "", status: "" });
+const searchForm = reactive({
+  username: "",
+  role: "",
+  department: "",
+  status: "",
+  createTimeRange: [] as string[],
+});
 const tableData = ref<User[]>([]);
 const selectedUsers = ref<User[]>([]);
 const loading = ref(false);
@@ -369,18 +396,32 @@ onMounted(() => loadTableData());
 const loadTableData = async () => {
   loading.value = true;
   try {
+    let createTimeStart: string | undefined;
+    let createTimeEnd: string | undefined;
+
+    if (searchForm.createTimeRange && searchForm.createTimeRange.length === 2) {
+      createTimeStart = searchForm.createTimeRange[0];
+      createTimeEnd = searchForm.createTimeRange[1];
+    }
+
     const response = await userApi.getUserList({
       page: pagination.currentPage,
       size: pagination.pageSize,
       username: searchForm.username || undefined,
       role: searchForm.role || undefined,
+      department: searchForm.department || undefined,
       status: searchForm.status || undefined,
+      createTimeStart,
+      createTimeEnd,
     });
+
     tableData.value = Array.isArray(response.list) ? response.list : [];
-    pagination.total = response.total;
+    pagination.total = response.total || 0;
   } catch (error) {
     console.error("Failed to load users:", error);
     ElMessage.error("Failed to load user data");
+    tableData.value = [];
+    pagination.total = 0;
   } finally {
     loading.value = false;
   }
@@ -438,9 +479,15 @@ const handleBatchAction = async (
   };
 
   const ids = selectedUsers.value.map((u) => u.id);
+  const config = actionMap[action];
 
   try {
-    const confirmed = await addConfirm(/* ... */);
+    const confirmed = await addConfirm({
+      title: config.title,
+      message: config.message,
+      confirmText: config.confirmText,
+      cancelText: "Cancel",
+    });
     if (!confirmed) return;
 
     if (action === "delete") {
@@ -491,8 +538,15 @@ const handleSearch = () => {
  * Handle reset search form
  */
 const handleReset = () => {
-  Object.assign(searchForm, { username: "", role: "", status: "" });
-  handleSearch();
+  Object.assign(searchForm, {
+    username: "",
+    role: "",
+    department: "",
+    status: "",
+    createTimeRange: [],
+  });
+  pagination.currentPage = 1;
+  loadTableData();
 };
 
 /**

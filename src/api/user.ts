@@ -18,7 +18,10 @@ export interface UserListParams {
   size: number;
   username?: string;
   role?: string;
+  department?: string;
   status?: "active" | "inactive" | "";
+  createTimeStart?: string;
+  createTimeEnd?: string;
 }
 
 export interface UserListResponse {
