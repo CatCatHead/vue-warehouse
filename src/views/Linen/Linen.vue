@@ -1,4 +1,4 @@
-<!-- src/views/Linen/Linen.vue -->
+<!-- Linen.vue -->
 <template>
   <div class="linen-page">
     <!-- Page Header -->
@@ -76,6 +76,15 @@
           />
         </el-form-item>
 
+        <el-form-item label="Category">
+          <el-input
+            v-model="searchForm.category"
+            placeholder="Enter category"
+            clearable
+            style="width: 180px"
+          />
+        </el-form-item>
+
         <el-form-item label="Status">
           <el-select
             v-model="searchForm.status"
@@ -83,9 +92,9 @@
             clearable
             style="width: 120px"
           >
-            <el-option label="Active" value="active" />
-            <el-option label="Inactive" value="inactive" />
-            <el-option label="Low Stock" value="low_stock" />
+            <el-option label="ACTIVE" value="ACTIVE" />
+            <el-option label="INACTIVE" value="INACTIVE" />
+            <el-option label="LOW_STOCK" value="LOW_STOCK" />
           </el-select>
         </el-form-item>
 
@@ -132,7 +141,7 @@
         <!-- Status Column -->
         <template #status="scope">
           <el-tag :type="getStatusType(scope.row.status)">
-            {{ getStatusText(scope.row.status) }}
+            {{ scope.row.status }}
           </el-tag>
         </template>
 
@@ -307,28 +316,13 @@ import {
 // Components
 import GTable from "@/components/common/GTable/GTable.vue";
 import ExportDialog from "@/components/common/ExportDialog/ExportDialog.vue";
-import { config } from "@/utils/config";
-import { linenApi } from "@/api/linen";
-
-// Types
-interface LinenItem {
-  id: string;
-  itemId: string;
-  description: string;
-  onHand: number;
-  minStock: number;
-  maxStock: number;
-  category: string;
-  status: "active" | "inactive" | "low_stock";
-  location: string;
-  lastUpdated: string;
-  createdAt: string;
-}
+import { linenApi, type LinenItem } from "@/api/linen";
 
 // Reactive data
 const searchForm = reactive({
   itemId: "",
   description: "",
+  category: "",
   status: "",
 });
 
@@ -371,13 +365,19 @@ const columns = [
   },
   {
     prop: "description",
-    label: "Item Description",
+    label: "Description",
     minWidth: 200,
     sortable: true,
   },
   {
+    prop: "category",
+    label: "Category",
+    width: 150,
+    sortable: true,
+  },
+  {
     prop: "onHand",
-    label: "On-hand",
+    label: "On Hand",
     width: 120,
     slot: "onHand",
     sortable: true,
@@ -412,13 +412,14 @@ const columns = [
 // Export Columns
 const exportColumns = computed(() => [
   { key: "itemId", title: "Item ID", visible: true },
-  { key: "description", title: "Item Description", visible: true },
-  { key: "onHand", title: "On-hand", visible: true },
+  { key: "description", title: "Description", visible: true },
+  { key: "category", title: "Category", visible: true },
+  { key: "onHand", title: "On Hand", visible: true },
   { key: "minStock", title: "Min Stock", visible: true },
   { key: "maxStock", title: "Max Stock", visible: true },
-  { key: "category", title: "Category", visible: true },
+  { key: "status", title: "Status", visible: true },
   { key: "location", title: "Location", visible: true },
-  { key: "status", title: "Status", visible: true, formatter: getStatusText },
+  { key: "lastUpdated", title: "Last Updated", visible: true },
 ]);
 
 // Computed
@@ -436,6 +437,12 @@ const filteredTableData = computed(() => {
       item.description
         .toLowerCase()
         .includes(searchForm.description.toLowerCase()),
+    );
+  }
+
+  if (searchForm.category) {
+    filtered = filtered.filter((item) =>
+      item.category.toLowerCase().includes(searchForm.category.toLowerCase()),
     );
   }
 
@@ -460,57 +467,17 @@ onMounted(() => {
 const loadTableData = async () => {
   loading.value = true;
   try {
-    // const response = await http.get('/linen', {
-    //   page: pagination.currentPage,
-    //   size: pagination.pageSize,
-    //   ...searchForm
-    // });
-    // tableData.value = response.list;
-    // pagination.total = response.total;
+    const response = await linenApi.getLinenItems({
+      page: pagination.currentPage,
+      size: pagination.pageSize,
+      itemId: searchForm.itemId || undefined,
+      description: searchForm.description || undefined,
+      category: searchForm.category || undefined,
+      status: searchForm.status || undefined,
+    });
 
-    await new Promise((resolve) => setTimeout(resolve, config.mockDelay));
-    tableData.value = [
-      {
-        id: "1",
-        itemId: "LIN-001",
-        description: "Bed Sheet - King Size",
-        onHand: 45,
-        minStock: 50,
-        maxStock: 200,
-        category: "Bedding",
-        location: "Warehouse A",
-        status: "low_stock",
-        lastUpdated: "2024-01-20T10:30:00Z",
-        createdAt: "2024-01-15T10:30:00Z",
-      },
-      {
-        id: "2",
-        itemId: "LIN-002",
-        description: "Pillow Case - Standard",
-        onHand: 120,
-        minStock: 50,
-        maxStock: 300,
-        category: "Bedding",
-        location: "Warehouse B",
-        status: "active",
-        lastUpdated: "2024-01-20T09:15:00Z",
-        createdAt: "2024-01-10T14:20:00Z",
-      },
-      {
-        id: "3",
-        itemId: "LIN-003",
-        description: "Bath Towel - Large",
-        onHand: 85,
-        minStock: 40,
-        maxStock: 200,
-        category: "Bath",
-        location: "Warehouse A",
-        status: "active",
-        lastUpdated: "2024-01-19T16:45:00Z",
-        createdAt: "2024-01-12T11:30:00Z",
-      },
-    ];
-    pagination.total = tableData.value.length;
+    tableData.value = response.list;
+    pagination.total = response.total;
   } catch (error) {
     ElMessage.error("Failed to load linen items");
     console.error(error);
@@ -528,15 +495,22 @@ const handleOperationSubmit = async () => {
   operationLoading.value = true;
 
   try {
+    const currentItem = tableData.value.find(
+      (item) => item.itemId === operationDialog.itemId,
+    );
+    if (!currentItem) {
+      throw new Error("Item not found");
+    }
+
     if (operationDialog.type === "inbound") {
       await linenApi.inbound(
-        operationDialog.itemId,
+        currentItem.id,
         operationForm.quantity,
         operationForm.notes,
       );
     } else {
       await linenApi.outbound(
-        operationDialog.itemId,
+        currentItem.id,
         operationForm.quantity,
         operationForm.notes,
       );
@@ -546,9 +520,10 @@ const handleOperationSubmit = async () => {
       `${operationDialog.type === "inbound" ? "Inbound" : "Outbound"} operation completed successfully`,
     );
     handleOperationClose();
-    refreshData();
-  } catch (error) {
-    ElMessage.error("Operation failed. Please try again.");
+    await loadTableData();
+  } catch (error: any) {
+    ElMessage.error(error.message || "Operation failed. Please try again.");
+    console.error(error);
   } finally {
     operationLoading.value = false;
   }
@@ -571,6 +546,7 @@ const handleSearch = () => {
 const handleReset = () => {
   searchForm.itemId = "";
   searchForm.description = "";
+  searchForm.category = "";
   searchForm.status = "";
   pagination.currentPage = 1;
 };
@@ -604,12 +580,13 @@ const handleDelete = async (row: LinenItem) => {
       },
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    tableData.value = tableData.value.filter((item) => item.id !== row.id);
-    pagination.total = tableData.value.length;
+    await linenApi.deleteLinen(row.id);
     ElMessage.success("Linen item deleted successfully");
+    await loadTableData();
   } catch (error) {
-    ElMessage.info("Delete canceled");
+    if (error !== "cancel") {
+      ElMessage.error("Failed to delete linen item");
+    }
   }
 };
 
@@ -633,20 +610,20 @@ const handleBatchDelete = async () => {
     if (!confirmed) return;
 
     batchLoading.value = true;
-    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const selectedIds = selectedItems.value.map((item) => item.id);
-    tableData.value = tableData.value.filter(
-      (item) => !selectedIds.includes(item.id),
-    );
-    pagination.total = tableData.value.length;
+    for (const item of selectedItems.value) {
+      await linenApi.deleteLinen(item.id);
+    }
 
     ElMessage.success(
       `${selectedItems.value.length} item(s) deleted successfully`,
     );
     clearSelection();
+    await loadTableData();
   } catch (error) {
-    ElMessage.info("Delete canceled");
+    if (error !== "cancel") {
+      ElMessage.error("Failed to delete selected items");
+    }
   } finally {
     batchLoading.value = false;
   }
@@ -710,139 +687,12 @@ const handlePageChange = (newPagination: any) => {
 // Helper methods
 const getStatusType = (status: string) => {
   const types: Record<string, string> = {
-    active: "success",
-    inactive: "info",
-    low_stock: "warning",
+    ACTIVE: "success",
+    INACTIVE: "info",
+    LOW_STOCK: "warning",
   };
   return types[status] || "info";
 };
-
-const getStatusText = (status: string) => {
-  const texts: Record<string, string> = {
-    active: "Active",
-    inactive: "Inactive",
-    low_stock: "Low Stock",
-  };
-  return texts[status] || status;
-};
 </script>
 
-<style scoped>
-.linen-page {
-  padding: 20px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.header-left .page-title {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.batch-actions {
-  margin-bottom: 20px;
-}
-
-.batch-actions-card {
-  background-color: var(--el-color-primary-light-9);
-  border: 1px solid var(--el-color-primary-light-7);
-}
-
-.batch-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-}
-
-.batch-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--el-color-primary);
-  font-weight: 500;
-}
-
-.batch-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.search-card {
-  margin-bottom: 20px;
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.table-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* On-hand cell styles */
-.on-hand-cell {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.on-hand-cell .low-stock {
-  color: var(--el-color-warning);
-  font-weight: 600;
-}
-
-.warning-icon {
-  font-size: 14px;
-}
-
-/* Action buttons styles */
-.action-buttons {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.operation-dropdown {
-  margin: 0 4px;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .batch-content {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  .batch-buttons {
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .action-buttons .el-button {
-    width: 100%;
-  }
-}
-</style>
+<style scoped src="./Linen.css"></style>
