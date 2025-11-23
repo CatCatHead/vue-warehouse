@@ -82,7 +82,7 @@ export const linenApi = {
     quantity: number,
     notes?: string,
   ): Promise<LinenItem> {
-    const res = await http.post<any>(`linen/${id}/inbound`, {
+    const res = await http.post<any>(`/linen/${id}/inbound`, {
       quantity,
       notes,
     });

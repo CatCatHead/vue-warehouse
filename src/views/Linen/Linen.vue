@@ -315,8 +315,11 @@ import {
 
 // Components
 import GTable from "@/components/common/GTable/GTable.vue";
+import { addDialog, addConfirm } from "@/components/common/GDialog";
 import ExportDialog from "@/components/common/ExportDialog/ExportDialog.vue";
+import LinenForm from "@/components/common/Form/LinenItemForm.vue";
 import { linenApi, type LinenItem } from "@/api/linen";
+import LinenItemForm from "@/components/common/Form/LinenItemForm.vue";
 
 // Reactive data
 const searchForm = reactive({
@@ -523,7 +526,24 @@ const refreshData = () => {
 
 // Action methods
 const handleAddLinen = () => {
-  ElMessage.info("Add linen functionality to be implemented");
+  addDialog({
+    title: "Add Linen Item",
+    component: LinenItemForm,
+    props: { mode: "add" },
+    width: 600,
+    closeOnClickModal: false,
+    callBack: async (payload: any) => {
+      if (!payload?.ok || !payload.data) return;
+      try {
+        await linenApi.createLinen(payload.data);
+        ElMessage.success("Linen created successfully");
+        await loadTableData();
+      } catch (error) {
+        console.error(error);
+        ElMessage.error("Failed to create Linen");
+      }
+    },
+  });
 };
 
 const handleView = (row: LinenItem) => {
@@ -531,7 +551,24 @@ const handleView = (row: LinenItem) => {
 };
 
 const handleEdit = (row: LinenItem) => {
-  ElMessage.info(`Edit linen: ${row.itemId}`);
+  addDialog({
+    title: "Edit Linen Item",
+    component: LinenForm,
+    props: { mode: "edit", initial: row },
+    width: 600,
+    closeOnClickModal: false,
+    callBack: async (payload: any) => {
+      if (!payload?.ok || !payload.data) return;
+      try {
+        await linenApi.updateLinen(row.id, payload.data);
+        ElMessage.success("Linen updated successfully");
+        await loadTableData();
+      } catch (e) {
+        console.error(e);
+        ElMessage.error("Failed to update linen item");
+      }
+    },
+  });
 };
 
 const handleDelete = async (row: LinenItem) => {
