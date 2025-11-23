@@ -51,45 +51,14 @@ const fromBackendLinen = (l: any): LinenItem => ({
 });
 
 export const linenApi = {
-  async getLinenItems(
-    params: LinenListParams = {},
-  ): Promise<LinenListResponse> {
-    try {
-      console.log("Sending request to /api/linen with params:", params);
-
-      const res = await http.get<any>("/linen", { params });
-      console.log("Raw response from API:", res);
-
-      if (res && res.list) {
-        return {
-          list: res.list.map(fromBackendLinen),
-          total: res.total || 0,
-          page: res.page || params.page || 1,
-          size: res.size || params.size || 10,
-        };
-      }
-
-      if (Array.isArray(res)) {
-        const list = res.map(fromBackendLinen);
-        return {
-          list,
-          total: list.length,
-          page: params.page || 1,
-          size: params.size || 10,
-        };
-      }
-
-      console.warn("Unexpected response format:", res);
-      return {
-        list: [],
-        total: 0,
-        page: params.page || 1,
-        size: params.size || 10,
-      };
-    } catch (error) {
-      console.error("Error in getLinenItems:", error);
-      throw error;
-    }
+  async getLinenItems(params: LinenListParams): Promise<LinenListResponse> {
+    const res = await http.get<any>("/linen", params);
+    return {
+      list: (res.list || []).map(fromBackendLinen),
+      total: res.total ?? 0,
+      page: res.page ?? params.page,
+      size: res.size ?? params.size,
+    };
   },
 
   async createLinen(

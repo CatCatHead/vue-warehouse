@@ -128,7 +128,7 @@
 
       <GTable
         :columns="columns"
-        :data="filteredTableData"
+        :data="tableData"
         :loading="loading"
         :pagination="pagination"
         :show-pagination="true"
@@ -422,42 +422,6 @@ const exportColumns = computed(() => [
   { key: "lastUpdated", title: "Last Updated", visible: true },
 ]);
 
-// Computed
-const filteredTableData = computed(() => {
-  let filtered = tableData.value;
-
-  if (searchForm.itemId) {
-    filtered = filtered.filter((item) =>
-      item.itemId.toLowerCase().includes(searchForm.itemId.toLowerCase()),
-    );
-  }
-
-  if (searchForm.description) {
-    filtered = filtered.filter((item) =>
-      item.description
-        .toLowerCase()
-        .includes(searchForm.description.toLowerCase()),
-    );
-  }
-
-  if (searchForm.category) {
-    filtered = filtered.filter((item) =>
-      item.category.toLowerCase().includes(searchForm.category.toLowerCase()),
-    );
-  }
-
-  if (searchForm.status) {
-    filtered = filtered.filter((item) => item.status === searchForm.status);
-  }
-
-  pagination.total = filtered.length;
-
-  const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
-  const endIndex = startIndex + pagination.pageSize;
-
-  return filtered.slice(startIndex, endIndex);
-});
-
 // Lifecycle
 onMounted(() => {
   loadTableData();
@@ -541,6 +505,7 @@ const clearSelection = () => {
 // Search methods
 const handleSearch = () => {
   pagination.currentPage = 1;
+  loadTableData();
 };
 
 const handleReset = () => {
@@ -549,6 +514,7 @@ const handleReset = () => {
   searchForm.category = "";
   searchForm.status = "";
   pagination.currentPage = 1;
+  loadTableData();
 };
 
 const refreshData = () => {
@@ -681,7 +647,23 @@ const handleExportComplete = () => {
 
 // Pagination
 const handlePageChange = (newPagination: any) => {
-  Object.assign(pagination, newPagination);
+  console.log("Page change", newPagination);
+
+  pagination.currentPage = newPagination.currentPage;
+  pagination.pageSize = newPagination.pageSize;
+
+  loadTableData();
+};
+
+const handleSizeChange = (size: number) => {
+  pagination.pageSize = size;
+  pagination.currentPage = 1;
+  loadTableData();
+};
+
+const handleCurrentChange = (page: number) => {
+  pagination.currentPage = page;
+  loadTableData();
 };
 
 // Helper methods
