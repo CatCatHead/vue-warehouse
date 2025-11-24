@@ -57,14 +57,19 @@
         <span>Linens</span>
       </el-menu-item>
 
-      <el-menu-item index="/DeliveryList">
+      <el-menu-item index="/deliveryList">
         <el-icon><InfoFilled /></el-icon>
         <span>Delivery List</span>
       </el-menu-item>
 
-      <el-menu-item index="/DeliveryListUpload">
+      <el-menu-item index="/deliveryListUpload">
         <el-icon><InfoFilled /></el-icon>
         <span>Delivery List Upload</span>
+      </el-menu-item>
+
+      <el-menu-item index="/departments">
+        <el-icon><InfoFilled /></el-icon>
+        <span>Departments</span>
       </el-menu-item>
     </el-menu>
   </div>

@@ -89,6 +89,17 @@ export const routes: RouteRecordRaw[] = [
           closeable: true,
         },
       },
+      {
+        path: "departments",
+        name: "Departments",
+        component: () =>
+          lazyLoad(() => import("@/views/department/Department.vue")),
+        meta: {
+          title: "Departments",
+          requiresAuth: true,
+          closeable: true,
+        },
+      },
     ],
   },
   {
