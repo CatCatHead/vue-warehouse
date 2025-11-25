@@ -273,6 +273,8 @@ import ExportDialog from "@/components/common/ExportDialog/ExportDialog.vue";
 import type { ColumnDefinition } from "@/utils/export";
 import { exportToExcel, formatDateForExport } from "@/utils/export";
 import { departmentApi } from "@/api/department.ts";
+import { addDialog } from "@/composables/useDialog.ts";
+import DepartmentForm from "@/components/common/Form/DepartmentForm.vue";
 
 // Types
 interface Department {
@@ -327,19 +329,6 @@ const rules = reactive({
   departmentName: [
     { required: true, message: "Department name is required", trigger: "blur" },
     { min: 2, max: 100, message: "2-100 characters", trigger: "blur" },
-  ],
-  manager: [
-    { required: false, message: "Manager name is required", trigger: "blur" },
-  ],
-  contactPhone: [
-    { required: false, message: "Contact phone is required", trigger: "blur" },
-  ],
-  email: [
-    {
-      type: "email",
-      message: "Please enter a valid email address",
-      trigger: ["blur", "change"],
-    },
   ],
 });
 
@@ -423,27 +412,47 @@ const refreshData = () => {
  * Handle add department
  */
 const handleAdd = () => {
-  dialog.visible = true;
-  dialog.title = "Create Department";
-  dialog.mode = "add";
+  addDialog({
+    title: "Add Department",
+    component: DepartmentForm,
+    props: { mode: "add" },
+    width: 600,
+    closeOnClickModal: false,
+    callBack: async (payload: any) => {
+      if (!payload?.ok || !payload.data) return;
+      try {
+        await departmentApi.createDepartment(payload.data);
+        ElMessage.success("Department created successfully.");
+        await loadTableData();
+      } catch (error) {
+        console.log(error);
+        ElMessage.error("Failed to create department");
+      }
+    },
+  });
 };
 
 /**
  * Handle edit department
  */
 const handleEdit = (row: Department) => {
-  dialog.visible = true;
-  dialog.title = "Edit Department";
-  dialog.mode = "edit";
-
-  // Fill form with row data
-  Object.assign(form, {
-    id: row.id,
-    departmentCode: row.departmentCode,
-    departmentName: row.departmentName,
-    manager: row.manager,
-    contactPhone: row.contactPhone,
-    email: row.email,
+  addDialog({
+    title: "Edit Department",
+    component: DepartmentForm,
+    props: { mode: "edit", initial: row },
+    width: 600,
+    closeOnClickModal: false,
+    callBack: async (payload: any) => {
+      if (!payload.ok || !payload.data) return;
+      try {
+        await departmentApi.updateDepartment(row.id, payload.data);
+        ElMessage.success("Department updated successfully.");
+        await loadTableData();
+      } catch (error) {
+        console.error(error);
+        ElMessage.error("Failed to update department");
+      }
+    },
   });
 };
 
@@ -453,7 +462,7 @@ const handleEdit = (row: Department) => {
 const handleDelete = async (row: Department) => {
   try {
     await ElMessageBox.confirm(
-      `Are you sure to delete department: ${row.departmentName}?`,
+      `Are you sure you want to delete this Department ${row.id}?`,
       "Confirm Delete",
       {
         confirmButtonText: "Delete",
@@ -462,15 +471,12 @@ const handleDelete = async (row: Department) => {
       },
     );
 
-    // TODO: Replace with actual API call
-    // await departmentApi.deleteDepartment(row.id);
-
-    ElMessage.success("Department deleted successfully");
+    await departmentApi.deleteDepartment(row.id);
+    ElMessage.success("Department deleted successfully.");
     await loadTableData();
   } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error("Failed to delete department");
-    }
+    console.log(error);
+    ElMessage.error("Failed to delete department");
   }
 };
 

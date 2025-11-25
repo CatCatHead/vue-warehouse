@@ -3,6 +3,7 @@
 import { http } from "@/utils/request";
 
 export interface Department {
+  id: string;
   departmentCode: string;
   departmentName: string;
 }
@@ -22,6 +23,7 @@ export interface DepartmentResponse {
 }
 
 const fromBackendDepartment = (l: any): Department => ({
+  id: String(l.id),
   departmentCode: String(l.departmentCode),
   departmentName: String(l.departmentName),
 });
@@ -37,5 +39,20 @@ export const departmentApi = {
       page: res.page ?? params.page,
       size: res.size ?? params.size,
     };
+  },
+  async createDepartment(department: Department): Promise<Department> {
+    const res = await http.post<any>("/departments", department);
+    return fromBackendDepartment(res);
+  },
+  async updateDepartment(
+    id: string,
+    department: Department,
+  ): Promise<Department> {
+    const res = await http.put<any>(`/departments/${id}`, department);
+    return fromBackendDepartment(res);
+  },
+  async deleteDepartment(id: string): Promise<Department> {
+    const res = await http.delete<any>(`/departments/${id}`);
+    return fromBackendDepartment(res);
   },
 };
