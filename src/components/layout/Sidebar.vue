@@ -71,6 +71,11 @@
         <el-icon><InfoFilled /></el-icon>
         <span>Departments</span>
       </el-menu-item>
+
+      <el-menu-item index="/items">
+        <el-icon><InfoFilled /></el-icon>
+        <span>Items</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>

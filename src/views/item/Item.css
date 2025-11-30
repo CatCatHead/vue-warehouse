@@ -1,0 +1,118 @@
+.item-page {
+    padding: 20px;
+    background-color: #f5f7fa;
+    min-height: calc(100vh - 40px);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-left .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #303133;
+    margin: 0;
+}
+
+.batch-actions {
+    margin-bottom: 20px;
+}
+
+.batch-actions-card {
+    border-left: 4px solid #409eff;
+}
+
+.batch-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.batch-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #409eff;
+}
+
+.batch-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-card {
+    margin-bottom: 20px;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.item-image {
+    display: flex;
+    justify-content: center;
+}
+
+.no-image {
+    color: #909399;
+    font-size: 12px;
+}
+
+:deep(.avatar-uploader) {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    width: 148px;
+    height: 148px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+:deep(.avatar-uploader:hover) {
+    border-color: #409eff;
+}
+
+:deep(.avatar-uploader-icon) {
+    font-size: 28px;
+    color: #8c939d;
+}
+
+:deep(.avatar) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.upload-tip {
+    font-size: 12px;
+    color: #909399;
+    margin-top: 8px;
+}
