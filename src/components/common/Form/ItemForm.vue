@@ -6,9 +6,9 @@
     label-width="140px"
     status-icon
   >
-    <el-form-item label="Item ID" prop="item_id">
+    <el-form-item label="Item ID" prop="itemId">
       <el-input
-        v-model="form.item_id"
+        v-model="form.itemId"
         placeholder="Enter item ID"
         clearable
         style="width: 100%"
@@ -16,9 +16,9 @@
       />
     </el-form-item>
 
-    <el-form-item label="Item Description" prop="item_description">
+    <el-form-item label="Item Description" prop="itemDescription">
       <el-input
-        v-model="form.item_description"
+        v-model="form.itemDescription"
         placeholder="Enter item description"
         clearable
         type="textarea"
@@ -29,9 +29,9 @@
       />
     </el-form-item>
 
-    <el-form-item label="Unit Price" prop="unit_of_price">
+    <el-form-item label="Unit Price" prop="unitOfPrice">
       <el-input-number
-        v-model="form.unit_of_price"
+        v-model="form.unitOfPrice"
         placeholder="Enter unit price"
         :min="0"
         :precision="2"
@@ -67,14 +67,14 @@
           :http-request="handleUpload"
           :disabled="uploading"
         >
-          <img v-if="form.item_graph" :src="form.item_graph" class="avatar" />
+          <img v-if="form.itemGraph" :src="form.itemGraph" class="avatar" />
           <div v-else class="avatar-uploader-placeholder">
             <el-icon size="24"><Plus /></el-icon>
             <span class="upload-text">Upload Image</span>
           </div>
         </el-upload>
 
-        <div class="upload-actions" v-if="form.item_graph">
+        <div class="upload-actions" v-if="form.itemGraph">
           <el-button
             type="danger"
             text
@@ -118,11 +118,11 @@ import { Plus } from "@element-plus/icons-vue";
 
 interface ItemFormData {
   id?: string | number;
-  item_id: string;
-  item_description: string;
-  unit_of_price: number;
+  itemId: string;
+  itemDescription: string;
+  unitOfPrice: number;
   unit: string;
-  item_graph: string;
+  itemGraph: string;
 }
 
 const props = defineProps<{
@@ -151,16 +151,16 @@ const unitOptions = [
 // Form data
 const form = reactive<ItemFormData>({
   id: "",
-  item_id: "",
-  item_description: "",
-  unit_of_price: 0,
+  itemId: "",
+  itemDescription: "",
+  unitOfPrice: 0,
   unit: "",
-  item_graph: "",
+  itemGraph: "",
 });
 
 // Form validation rules
 const rules = reactive<FormRules>({
-  item_id: [
+  itemId: [
     {
       required: true,
       message: "Item ID is required",
@@ -179,7 +179,7 @@ const rules = reactive<FormRules>({
       trigger: "blur",
     },
   ],
-  item_description: [
+  itemDescription: [
     {
       required: true,
       message: "Item description is required",
@@ -192,7 +192,7 @@ const rules = reactive<FormRules>({
       trigger: "blur",
     },
   ],
-  unit_of_price: [
+  unitOfPrice: [
     {
       required: true,
       message: "Unit price is required",
@@ -233,11 +233,11 @@ watch(
 
     Object.assign(form, {
       id: val.id ?? "",
-      item_id: val.item_id ?? "",
-      item_description: val.item_description ?? "",
-      unit_of_price: val.unit_of_price ?? 0,
+      itemId: val.itemId ?? "",
+      itemDescription: val.itemDescription ?? "",
+      unitOfPrice: val.unitOfPrice ?? 0,
       unit: val.unit ?? "",
-      item_graph: val.item_graph ?? "",
+      itemGraph: val.itemGraph ?? "",
     });
   },
   { immediate: true, deep: true },
@@ -246,11 +246,11 @@ watch(
 // Methods
 function resetForm() {
   form.id = "";
-  form.item_id = "";
-  form.item_description = "";
-  form.unit_of_price = 0;
+  form.itemId = "";
+  form.itemDescription = "";
+  form.unitOfPrice = 0;
   form.unit = "";
-  form.item_graph = "";
+  form.itemGraph = "";
 
   if (formRef.value) {
     formRef.value.clearValidate();
@@ -324,7 +324,7 @@ function handleUpload(options: { file: File }) {
   setTimeout(() => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      form.item_graph = e.target?.result as string;
+      form.itemGraph = e.target?.result as string;
       uploading.value = false;
       ElMessage.success("Image uploaded successfully");
     };
@@ -337,7 +337,7 @@ function handleUpload(options: { file: File }) {
 }
 
 function removeImage() {
-  form.item_graph = "";
+  form.itemGraph = "";
   ElMessage.info("Image removed");
 }
 

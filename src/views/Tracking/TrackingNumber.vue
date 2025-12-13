@@ -1,340 +1,319 @@
-<!-- tracking/TrackingNumber.vue -->
 <template>
   <div class="tracking-page">
-    <div class="page-header">
-      <div class="header-left">
-        <h1 class="page-title">Tracking Number Management</h1>
-        <el-text type="info">Manage all tracking numbers in the system</el-text>
-      </div>
-      <div class="header-actions">
-        <el-button type="primary" :icon="Plus" @click="handleAddTracking"
-          >Add Tracking</el-button
-        >
+    <!-- Search Card -->
+    <el-card shadow="hover" class="search-card">
+      <template #header>
+        <div class="card-header">
+          <span>Tracking Number Search</span>
+          <div class="header-actions">
+            <el-button type="primary" @click="handleSearch" :loading="loading">
+              Search
+            </el-button>
+            <el-button @click="handleReset" :disabled="loading">
+              Reset
+            </el-button>
+          </div>
+        </div>
+      </template>
 
-        <el-button
-          :icon="Download"
-          @click="handleOpenExport"
-          :disabled="tableData.length === 0"
-        >
-          Export
-        </el-button>
-        <el-button :icon="Refresh" @click="refreshData">Refresh</el-button>
-      </div>
-    </div>
-
-    <el-card class="search-card">
-      <el-form :model="searchForm" inline>
+      <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="Tracking Number">
           <el-input
             v-model="searchForm.trackingNumber"
-            placeholder="Input tracking number"
+            placeholder="Enter tracking number"
             clearable
-            style="width: 200px"
           />
         </el-form-item>
 
         <el-form-item label="Carrier Type">
           <el-select
-            v-model="searchForm.carrierType"
-            placeholder="Select carrier(s)"
+            v-model="searchForm.carrierTypes"
             multiple
             clearable
             collapse-tags
-            collapse-tags-tooltip
-            style="width: 300px"
+            placeholder="Select carrier type"
+            style="min-width: 220px"
           >
-            <el-option label="FedEx" value="fedex" />
-            <el-option label="FedEx Ground" value="fedex_ground" />
-            <el-option label="UPS" value="ups" />
-            <el-option label="Other" value="other" />
+            <el-option label="UPS" value="UPS" />
+            <el-option label="FedEx" value="FedEx" />
+            <el-option label="DHL" value="DHL" />
+            <el-option label="USPS" value="USPS" />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="Created Time">
+        <el-form-item label="Status">
+          <el-select
+            v-model="searchForm.status"
+            clearable
+            placeholder="Select status"
+            style="min-width: 160px"
+          >
+            <el-option label="Active" value="Active" />
+            <el-option label="Delivered" value="Delivered" />
+            <el-option label="Cancelled" value="Cancelled" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="Created Date">
           <el-date-picker
             v-model="searchForm.dateRange"
             type="daterange"
-            range-separator="To"
+            range-separator="to"
             start-placeholder="Start date"
             end-placeholder="End date"
-            style="width: 240px"
+            value-format="YYYY-MM-DD"
           />
-        </el-form-item>
-
-        <el-form-item>
-          <el-button type="primary" :icon="Search" @click="handleSearch"
-            >Search</el-button
-          >
-          <el-button :icon="Refresh" @click="handleReset">Reset</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
-    <el-card>
+    <!-- Table Card -->
+    <el-card shadow="never" class="table-card">
       <template #header>
-        <div class="table-header">
+        <div class="card-header">
           <span>Tracking Number List</span>
-          <div class="table-actions">
-            <el-text type="info"
-              >In total {{ tableData.length }} entries</el-text
-            >
+          <div class="header-actions">
+            <el-button type="primary" @click="openCreateDialog">
+              Add Tracking
+            </el-button>
           </div>
         </div>
       </template>
 
-      <GTable
-        :columns="columns"
-        :data="filteredTableData"
-        :loading="loading"
-        :pagination="pagination"
-        :show-pagination="true"
-        :selection="false"
-        :index="true"
-        :show-edit="true"
-        :show-delete="true"
-        @edit="handleEdit"
-        @delete="handleDelete"
-        @page-change="handlePageChange"
-      >
-        <template #carrierType="scope">
-          <el-tag :type="getCarrierType(scope.row.carrierType)">{{
-            getCarrierText(scope.row.carrierType)
-          }}</el-tag>
-        </template>
+      <el-table :data="tableData" v-loading="loading" border height="600">
+        <el-table-column
+          prop="trackingNumber"
+          label="Tracking Number"
+          min-width="200"
+          show-overflow-tooltip
+        />
 
-        <template #createdAt="scope">{{
-          formatDate(scope.row.createdAt)
-        }}</template>
+        <el-table-column
+          prop="carrierType"
+          label="Carrier Type"
+          min-width="150"
+        />
 
-        <template #actions="scope">
-          <el-button
-            size="small"
-            :icon="View"
-            @click.stop="handleView(scope.row)"
-            >View</el-button
-          >
-          <el-button
-            size="small"
-            :icon="Edit"
-            @click.stop="handleEdit(scope.row)"
-            >Edit</el-button
-          >
-          <el-button
-            size="small"
-            :icon="Delete"
-            type="danger"
-            @click.stop="handleDelete(scope.row)"
-            >Delete</el-button
-          >
-        </template>
-      </GTable>
+        <el-table-column prop="createdAt" label="Created At" min-width="200">
+          <template #default="{ row }">
+            {{ formatDateTime(row.createdAt) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="status" label="Status" min-width="140">
+          <template #default="{ row }">
+            <el-tag :type="statusTagType(row.status)" size="small">
+              {{ row.status }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Actions" fixed="right" width="220">
+          <template #default="{ row }">
+            <el-button
+              type="primary"
+              link
+              size="small"
+              @click="handleView(row)"
+            >
+              View
+            </el-button>
+            <el-button
+              type="primary"
+              link
+              size="small"
+              @click="openEditDialog(row)"
+            >
+              Edit
+            </el-button>
+            <el-button
+              type="danger"
+              link
+              size="small"
+              @click="handleDelete(row)"
+            >
+              Delete
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination-wrapper">
+        <el-pagination
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :current-page="pagination.currentPage"
+          :page-sizes="[10, 20, 50, 100]"
+          :page-size="pagination.pageSize"
+          :total="pagination.total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </el-card>
-    <!-- Export Dialog -->
-    <ExportDialog
-      :visible="exportDialogVisible"
-      :data="tableData"
-      :columns="exportColumns"
-      :default-filename="tracking_numbers"
-      @update:visible="exportDialogVisible = $event"
-      @export-complete="handleExportComplete"
-    />
+
+    <!-- Create / Edit Dialog -->
+    <el-dialog
+      v-model="dialog.visible"
+      :title="
+        dialog.mode === 'create'
+          ? 'Add Tracking Number'
+          : 'Edit Tracking Number'
+      "
+      width="520px"
+      destroy-on-close
+    >
+      <el-form
+        ref="dialogFormRef"
+        :model="dialog.form"
+        :rules="dialogRules"
+        label-width="120px"
+      >
+        <el-form-item label="Tracking Number" prop="trackingNumber">
+          <el-input
+            v-model="dialog.form.trackingNumber"
+            placeholder="Enter tracking number"
+          />
+        </el-form-item>
+
+        <el-form-item label="Carrier Type" prop="carrierType">
+          <el-select
+            v-model="dialog.form.carrierType"
+            placeholder="Select carrier type"
+          >
+            <el-option label="UPS" value="UPS" />
+            <el-option label="FedEx" value="FedEx" />
+            <el-option label="DHL" value="DHL" />
+            <el-option label="USPS" value="USPS" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="Status" prop="status">
+          <el-select v-model="dialog.form.status" placeholder="Select status">
+            <el-option label="Active" value="Active" />
+            <el-option label="Delivered" value="Delivered" />
+            <el-option label="Cancelled" value="Cancelled" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="Created At">
+          <el-date-picker
+            v-model="dialog.form.createdAt"
+            type="datetime"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            placeholder="Select created time"
+            style="width: 100%"
+          />
+        </el-form-item>
+
+        <el-form-item label="Note">
+          <el-input
+            v-model="dialog.form.note"
+            type="textarea"
+            rows="3"
+            placeholder="Optional note"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialog.visible = false"> Cancel </el-button>
+          <el-button
+            type="primary"
+            :loading="dialog.saving"
+            @click="submitDialog"
+          >
+            Save
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { onMounted, reactive, ref } from "vue";
 import {
-  Plus,
-  Refresh,
-  Search,
-  Edit,
-  Delete,
-  View,
-} from "@element-plus/icons-vue";
-import GTable from "@/components/common/GTable/GTable.vue";
+  ElMessage,
+  ElMessageBox,
+  type FormInstance,
+  type FormRules,
+} from "element-plus";
+import {
+  trackingApi,
+  type TrackingNumber,
+  type TrackingListParams,
+} from "@/api/tracking";
 
-// Import export functionality
-import ExportDialog from "@/components/common/ExportDialog/ExportDialog.vue";
-import type { ColumnDefinition } from "@/utils/export";
-import { formatDateForExport } from "@/utils/export";
+const loading = ref(false);
+const tableData = ref<TrackingNumber[]>([]);
 
-// Export dialog state
-const exportDialogVisible = ref(false);
-
-// Export column definitions for tracking numbers
-const exportColumns = computed<ColumnDefinition[]>(() => [
-  { key: "trackingNumber", title: "Tracking Number", visible: true },
-  {
-    key: "carrierType",
-    title: "Carrier Type",
-    visible: true,
-    formatter: getCarrierText,
-  },
-  {
-    key: "createdAt",
-    title: "Created At",
-    visible: true,
-    formatter: formatDateForExport,
-  },
-  { key: "status", title: "Status", visible: true },
-]);
-
-/**
- * Open export dialog
- */
-const handleOpenExport = () => {
-  exportDialogVisible.value = true;
-};
-
-/**
- * Handle export completion
- */
-const handleExportComplete = () => {
-  // Optional cleanup
-};
-
-interface TrackingNumber {
-  id: string;
-  trackingNumber: string;
-  carrierType: string;
-  createdAt: string;
-  status?: string;
-}
+const pagination = reactive({
+  currentPage: 1,
+  pageSize: 10,
+  total: 0,
+});
 
 const searchForm = reactive({
   trackingNumber: "",
-  carrierType: [] as string[],
-  dateRange: [] as Date[],
+  carrierTypes: [] as string[],
+  status: "",
+  dateRange: [] as string[], // [start, end] in "YYYY-MM-DD"
 });
 
-const columns = [
-  {
-    prop: "trackingNumber",
-    label: "Tracking Number",
-    width: 200,
-    sortable: true,
-  },
-  {
-    prop: "carrierType",
-    label: "Carrier Type",
-    width: 150,
-    slot: "carrierType",
-  },
-  {
-    prop: "createdAt",
-    label: "Created At",
-    width: 180,
-    slot: "createdAt",
-    sortable: true,
-  },
-];
+const formatDateTime = (value?: string | null) => {
+  if (!value) return "-";
+  // value is ISO string "YYYY-MM-DDTHH:mm:ss"
+  return value.replace("T", " ");
+};
 
-const tableData = ref<TrackingNumber[]>([]);
-const loading = ref(false);
-const pagination = reactive({ currentPage: 1, pageSize: 10, total: 0 });
+const statusTagType = (status: string) => {
+  switch (status) {
+    case "Active":
+      return "info";
+    case "Delivered":
+      return "success";
+    case "Cancelled":
+      return "danger";
+    default:
+      return "default";
+  }
+};
 
-const filteredTableData = computed(() => {
-  let filtered = tableData.value;
+const buildListParams = (): TrackingListParams => {
+  const params: TrackingListParams = {
+    page: pagination.currentPage,
+    size: pagination.pageSize,
+  };
 
   if (searchForm.trackingNumber) {
-    filtered = filtered.filter((item) =>
-      item.trackingNumber
-        .toLowerCase()
-        .includes(searchForm.trackingNumber.toLowerCase()),
-    );
+    params.trackingNumber = searchForm.trackingNumber;
+  }
+  if (searchForm.carrierTypes.length > 0) {
+    params.carrierType = searchForm.carrierTypes.join(",");
+  }
+  if (searchForm.status) {
+    params.status = searchForm.status;
+  }
+  if (searchForm.dateRange.length === 2) {
+    params.startDate = searchForm.dateRange[0];
+    params.endDate = searchForm.dateRange[1];
   }
 
-  if (searchForm.carrierType && searchForm.carrierType.length > 0) {
-    filtered = filtered.filter((item) =>
-      searchForm.carrierType.includes(item.carrierType),
-    );
-  }
+  return params;
+};
 
-  if (searchForm.dateRange && searchForm.dateRange.length === 2) {
-    const startDate = new Date(searchForm.dateRange[0]);
-    const endDate = new Date(searchForm.dateRange[1]);
-    endDate.setHours(23, 59, 59, 999); // 设置为当天结束时间
-
-    filtered = filtered.filter((item) => {
-      const itemDate = new Date(item.createdAt);
-      return itemDate >= startDate && itemDate <= endDate;
-    });
-  }
-
-  pagination.total = filtered.length;
-
-  const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
-  const endIndex = startIndex + pagination.pageSize;
-
-  return filtered.slice(startIndex, endIndex);
-});
-
-onMounted(() => {
-  loadTableData();
-});
-
-const loadTableData = async () => {
+const fetchTableData = async () => {
   loading.value = true;
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    tableData.value = [
-      {
-        id: "1",
-        trackingNumber: "123456789012",
-        carrierType: "fedex",
-        createdAt: "2024-01-15T10:30:00Z",
-        status: "active",
-      },
-      {
-        id: "2",
-        trackingNumber: "987654321098",
-        carrierType: "ups",
-        createdAt: "2024-01-16T14:20:00Z",
-        status: "active",
-      },
-      {
-        id: "3",
-        trackingNumber: "456123789045",
-        carrierType: "fedex_ground",
-        createdAt: "2024-01-17T09:15:00Z",
-        status: "inactive",
-      },
-      {
-        id: "4",
-        trackingNumber: "789012345678",
-        carrierType: "other",
-        createdAt: "2024-01-18T16:45:00Z",
-        status: "active",
-      },
-      {
-        id: "5",
-        trackingNumber: "111222333444",
-        carrierType: "fedex",
-        createdAt: "2024-01-19T11:20:00Z",
-        status: "active",
-      },
-      {
-        id: "6",
-        trackingNumber: "555666777888",
-        carrierType: "ups",
-        createdAt: "2024-01-20T13:10:00Z",
-        status: "active",
-      },
-      {
-        id: "7",
-        trackingNumber: "999888777666",
-        carrierType: "fedex_ground",
-        createdAt: "2024-01-21T08:45:00Z",
-        status: "inactive",
-      },
-    ];
-
-    pagination.total = tableData.value.length;
+    const params = buildListParams();
+    const res = await trackingApi.getTrackingNumbers(params);
+    tableData.value = res.list || [];
+    pagination.total = res.total || 0;
   } catch (error) {
-    ElMessage.error("Failed to load tracking numbers");
     console.error(error);
+    ElMessage.error("Failed to load tracking numbers");
   } finally {
     loading.value = false;
   }
@@ -342,111 +321,200 @@ const loadTableData = async () => {
 
 const handleSearch = () => {
   pagination.currentPage = 1;
-  console.log("Search criteria:", searchForm);
+  fetchTableData();
 };
 
 const handleReset = () => {
   searchForm.trackingNumber = "";
-  searchForm.carrierType = [];
+  searchForm.carrierTypes = [];
+  searchForm.status = "";
   searchForm.dateRange = [];
   pagination.currentPage = 1;
+  fetchTableData();
 };
 
-const refreshData = () => {
-  loadTableData();
+const handleSizeChange = (size: number) => {
+  pagination.pageSize = size;
+  pagination.currentPage = 1;
+  fetchTableData();
 };
 
-const handleAddTracking = () => {
-  ElMessage.info("Add tracking number functionality to be implemented");
+const handleCurrentChange = (page: number) => {
+  pagination.currentPage = page;
+  fetchTableData();
 };
 
 const handleView = (row: TrackingNumber) => {
-  ElMessage.info(`View tracking: ${row.trackingNumber}`);
+  ElMessage.info(`Tracking: ${row.trackingNumber}`);
 };
 
-const handleEdit = (row: TrackingNumber) => {
-  ElMessage.info(`Edit tracking: ${row.trackingNumber}`);
+/**
+ * Dialog state
+ */
+type DialogMode = "create" | "edit";
+
+interface DialogForm {
+  id?: string | number;
+  trackingNumber: string;
+  carrierType: string;
+  status: string;
+  createdAt?: string;
+  note?: string;
+}
+
+const dialog = reactive({
+  visible: false,
+  mode: "create" as DialogMode,
+  saving: false,
+  form: {
+    id: undefined,
+    trackingNumber: "",
+    carrierType: "",
+    status: "",
+    createdAt: "",
+    note: "",
+  } as DialogForm,
+});
+
+const dialogFormRef = ref<FormInstance>();
+
+const dialogRules: FormRules<DialogForm> = {
+  trackingNumber: [
+    { required: true, message: "Tracking number is required", trigger: "blur" },
+  ],
+  carrierType: [
+    { required: true, message: "Carrier type is required", trigger: "change" },
+  ],
+  status: [
+    { required: true, message: "Status is required", trigger: "change" },
+  ],
+};
+
+const resetDialogForm = () => {
+  dialog.form.id = undefined;
+  dialog.form.trackingNumber = "";
+  dialog.form.carrierType = "";
+  dialog.form.status = "";
+  dialog.form.createdAt = "";
+  dialog.form.note = "";
+};
+
+const openCreateDialog = () => {
+  dialog.mode = "create";
+  resetDialogForm();
+  dialog.visible = true;
+};
+
+const openEditDialog = (row: TrackingNumber) => {
+  dialog.mode = "edit";
+  dialog.form.id = row.id;
+  dialog.form.trackingNumber = row.trackingNumber;
+  dialog.form.carrierType = row.carrierType;
+  dialog.form.status = row.status;
+  dialog.form.createdAt = row.createdAt;
+  dialog.form.note = row.note;
+  dialog.visible = true;
+};
+
+const submitDialog = () => {
+  if (!dialogFormRef.value) return;
+  dialogFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+    dialog.saving = true;
+    try {
+      if (dialog.mode === "create") {
+        await trackingApi.createTrackingNumber({
+          trackingNumber: dialog.form.trackingNumber,
+          carrierType: dialog.form.carrierType,
+          status: dialog.form.status,
+          createdAt: dialog.form.createdAt,
+          note: dialog.form.note,
+        });
+        ElMessage.success("Tracking number created");
+      } else {
+        await trackingApi.updateTrackingNumber(dialog.form.id!, {
+          trackingNumber: dialog.form.trackingNumber,
+          carrierType: dialog.form.carrierType,
+          status: dialog.form.status,
+          createdAt: dialog.form.createdAt,
+          note: dialog.form.note,
+        });
+        ElMessage.success("Tracking number updated");
+      }
+      dialog.visible = false;
+      fetchTableData();
+    } catch (error) {
+      console.error(error);
+      ElMessage.error("Failed to save tracking number");
+    } finally {
+      dialog.saving = false;
+    }
+  });
 };
 
 const handleDelete = async (row: TrackingNumber) => {
   try {
     await ElMessageBox.confirm(
-      `Are you sure to delete tracking number: ${row.trackingNumber}?`,
-      "Confirm Delete",
+      `Are you sure you want to delete tracking number "${row.trackingNumber}"?`,
+      "Confirm Deletion",
       {
-        confirmButtonText: "Delete",
-        cancelButtonText: "Cancel",
         type: "warning",
       },
     );
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    ElMessage.success("Tracking number deleted successfully");
-    loadTableData();
+    await trackingApi.deleteTrackingNumber(row.id);
+    ElMessage.success("Tracking number deleted");
+    fetchTableData();
   } catch (error) {
-    ElMessage.info("Delete canceled");
+    if (error !== "cancel") {
+      console.error(error);
+      ElMessage.error("Failed to delete tracking number");
+    }
   }
 };
 
-const handlePageChange = (newPagination: any) => {
-  Object.assign(pagination, newPagination);
-};
-
-const getCarrierType = (carrier: string) => {
-  const types: { [key: string]: string } = {
-    fedex: "danger",
-    fedex_ground: "warning",
-    ups: "success",
-    other: "info",
-  };
-  return types[carrier] || "info";
-};
-
-const getCarrierText = (carrier: string) => {
-  const texts: { [key: string]: string } = {
-    fedex: "FedEx",
-    fedex_ground: "FedEx Ground",
-    ups: "UPS",
-    other: "Other",
-  };
-  return texts[carrier] || carrier;
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleString("en-US");
-};
+onMounted(() => {
+  fetchTableData();
+});
 </script>
 
 <style scoped>
 .tracking-page {
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.page-header {
+.search-card,
+.table-card {
+  width: 100%;
+}
+
+.card-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
 }
 
-.header-left .page-title {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-}
-
-.search-card {
-  margin-bottom: 20px;
-}
-
-.table-header {
+.header-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 8px;
 }
 
-.table-actions {
+.search-form {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 0 0;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>

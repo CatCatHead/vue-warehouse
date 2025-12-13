@@ -4,11 +4,11 @@ import { http } from "@/utils/request";
 
 export interface Item {
   id: string;
-  item_id: string;
-  item_description: string;
-  unit_of_price: number;
+  itemId: string;
+  itemDescription: string;
+  unitOfPrice: number;
   unit: string;
-  item_graph: string;
+  itemGraph: string;
 }
 
 export interface ItemListParams {
@@ -27,42 +27,42 @@ export interface ItemListResponse {
 }
 
 export interface PriceUpdateRequest {
-  unit_of_price: number;
+  unitOfPrice: number;
   reason?: string;
 }
 
 export interface ItemCreateRequest {
-  item_id: string;
-  item_description: string;
-  unit_of_price: number;
+  itemId: string;
+  itemDescription: string;
+  unitOfPrice: number;
   unit: string;
-  item_graph?: string;
+  itemGraph?: string;
 }
 
 export interface ItemUpdateRequest {
-  item_description?: string;
-  unit_of_price?: number;
+  itemDescription?: string;
+  unitOfPrice?: number;
   unit?: string;
-  item_graph?: string;
+  itemGraph?: string;
 }
 
 // Transform backend data to frontend format
 const fromBackendItem = (item: any): Item => ({
   id: String(item.id),
-  item_id: item.item_id,
-  item_description: item.item_description,
-  unit_of_price: Number(item.unit_of_price),
+  itemId: item.itemId,
+  itemDescription: item.itemDescription,
+  unitOfPrice: Number(item.unitOfPrice),
   unit: item.unit,
-  item_graph: item.item_graph || "",
+  itemGraph: item.itemGraph || "",
 });
 
 // Transform frontend data to backend format
 const toBackendItem = (item: ItemCreateRequest | ItemUpdateRequest): any => ({
-  item_id: (item as ItemCreateRequest).item_id,
-  item_description: item.item_description,
-  unit_of_price: item.unit_of_price,
+  itemId: (item as ItemCreateRequest).itemId,
+  itemDescription: item.itemDescription,
+  unitOfPrice: item.unitOfPrice,
   unit: item.unit,
-  item_graph: item.item_graph,
+  itemGraph: item.itemGraph,
 });
 
 export const itemApi = {
@@ -122,7 +122,7 @@ export const itemApi = {
    */
   async updatePrice(id: string, request: PriceUpdateRequest): Promise<Item> {
     const res = await http.patch<any>(`/items/${id}/price`, {
-      unit_of_price: request.unit_of_price,
+      unitOfPrice: request.unitOfPrice,
       reason: request.reason,
     });
     return fromBackendItem(res);
@@ -133,7 +133,7 @@ export const itemApi = {
    */
   async searchItems(
     query: string,
-    params?: Omit<ItemListParams, "item_description">,
+    params?: Omit<ItemListParams, "itemDescription">,
   ): Promise<ItemListResponse> {
     const res = await http.get<any>("/items/search", {
       ...params,
@@ -190,9 +190,9 @@ export const itemApi = {
    * Validate item ID uniqueness
    */
   async validateItemId(
-    item_id: string,
+    itemId: string,
   ): Promise<{ valid: boolean; message?: string }> {
-    const res = await http.get<any>(`/items/validate/${item_id}`);
+    const res = await http.get<any>(`/items/validate/${itemId}`);
     return {
       valid: res.valid,
       message: res.message,
@@ -204,7 +204,7 @@ export const itemApi = {
    */
   async getPriceHistory(id: string): Promise<
     Array<{
-      unit_of_price: number;
+      unitOfPrice: number;
       updatedAt: string;
       updatedBy: string;
       reason?: string;

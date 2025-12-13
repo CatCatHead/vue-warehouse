@@ -58,7 +58,7 @@
       <el-form :model="searchForm" inline>
         <el-form-item label="Item ID">
           <el-input
-            v-model="searchForm.item_id"
+            v-model="searchForm.itemId"
             placeholder="Enter Item ID"
             clearable
             style="width: 200px"
@@ -67,7 +67,7 @@
 
         <el-form-item label="Item Description">
           <el-input
-            v-model="searchForm.item_description"
+            v-model="searchForm.itemDescription"
             placeholder="Enter Item Description"
             clearable
             style="width: 250px"
@@ -130,11 +130,11 @@
         <el-table-column type="selection" width="55" />
 
         <!-- Item ID Column -->
-        <el-table-column prop="item_id" label="Item ID" width="180" sortable />
+        <el-table-column prop="itemId" label="Item ID" width="180" sortable />
 
         <!-- Item Description Column -->
         <el-table-column
-          prop="item_description"
+          prop="itemDescription"
           label="Item Description"
           min-width="200"
           sortable
@@ -142,14 +142,11 @@
 
         <!-- Unit Price Column -->
         <el-table-column
-          prop="unit_of_price"
+          prop="unitOfPrice"
           label="Unit Price"
           width="120"
           sortable
         >
-          <template #default="scope">
-            <span>${{ scope.row.unit_of_price.toFixed(2) }}</span>
-          </template>
         </el-table-column>
 
         <!-- Unit Column -->
@@ -158,11 +155,11 @@
         <!-- Item Image Column -->
         <el-table-column label="Image" width="100">
           <template #default="scope">
-            <div v-if="scope.row.item_graph" class="item-image">
+            <div v-if="scope.row.itemGraph" class="item-image">
               <el-image
                 style="width: 40px; height: 40px"
-                :src="scope.row.item_graph"
-                :preview-src-list="[scope.row.item_graph]"
+                :src="scope.row.itemGraph"
+                :preview-src-list="[scope.row.itemGraph]"
                 fit="cover"
                 :preview-teleported="true"
               />
@@ -223,9 +220,9 @@
         :rules="rules"
         label-width="120px"
       >
-        <el-form-item label="Item ID" prop="item_id">
+        <el-form-item label="Item ID" prop="itemId">
           <el-input
-            v-model="form.item_id"
+            v-model="form.itemId"
             placeholder="Enter Item ID"
             maxlength="50"
             show-word-limit
@@ -233,9 +230,9 @@
           />
         </el-form-item>
 
-        <el-form-item label="Item Description" prop="item_description">
+        <el-form-item label="Item Description" prop="itemDescription">
           <el-input
-            v-model="form.item_description"
+            v-model="form.itemDescription"
             placeholder="Enter Item Description"
             maxlength="200"
             show-word-limit
@@ -244,9 +241,9 @@
           />
         </el-form-item>
 
-        <el-form-item label="Unit Price" prop="unit_of_price">
+        <el-form-item label="Unit Price" prop="unitOfPrice">
           <el-input-number
-            v-model="form.unit_of_price"
+            v-model="form.unitOfPrice"
             placeholder="Enter unit price"
             :min="0"
             :precision="2"
@@ -278,7 +275,7 @@
             :before-upload="beforeUpload"
             :http-request="handleUpload"
           >
-            <img v-if="form.item_graph" :src="form.item_graph" class="avatar" />
+            <img v-if="form.itemGraph" :src="form.itemGraph" class="avatar" />
             <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
           </el-upload>
           <div class="upload-tip">
@@ -338,17 +335,17 @@ import ItemForm from "@/components/common/Form/ItemForm.vue";
 // Types
 interface Item {
   id: string;
-  item_id: string;
-  item_description: string;
-  unit_of_price: number;
+  itemId: string;
+  itemDescription: string;
+  unitOfPrice: number;
   unit: string;
-  item_graph: string;
+  itemGraph: string;
 }
 
 // Reactive data
 const searchForm = reactive({
-  item_id: "",
-  item_description: "",
+  itemId: "",
+  itemDescription: "",
   unit: "",
 });
 
@@ -376,11 +373,11 @@ const dialog = reactive({
 // Form data
 const form = reactive({
   id: "",
-  item_id: "",
-  item_description: "",
-  unit_of_price: 0,
+  itemId: "",
+  itemDescription: "",
+  unitOfPrice: 0,
   unit: "",
-  item_graph: "",
+  itemGraph: "",
 });
 
 // Unit options
@@ -396,11 +393,11 @@ const unitOptions = ref([
 
 // Form validation rules
 const rules = reactive({
-  item_id: [
+  itemId: [
     { required: true, message: "Item ID is required", trigger: "blur" },
     { min: 1, max: 50, message: "1-50 characters", trigger: "blur" },
   ],
-  item_description: [
+  itemDescription: [
     {
       required: true,
       message: "Item description is required",
@@ -408,7 +405,7 @@ const rules = reactive({
     },
     { min: 1, max: 200, message: "1-200 characters", trigger: "blur" },
   ],
-  unit_of_price: [
+  unitOfPrice: [
     { required: true, message: "Unit price is required", trigger: "blur" },
     {
       type: "number",
@@ -422,9 +419,9 @@ const rules = reactive({
 
 // Export column definitions
 const exportColumns = computed<ColumnDefinition[]>(() => [
-  { key: "item_id", title: "Item ID", visible: true },
-  { key: "item_description", title: "Item Description", visible: true },
-  { key: "unit_of_price", title: "Unit Price", visible: true },
+  { key: "itemId", title: "Item ID", visible: true },
+  { key: "itemDescription", title: "Item Description", visible: true },
+  { key: "unitOfPrice", title: "Unit Price", visible: true },
   { key: "unit", title: "Unit", visible: true },
 ]);
 
@@ -445,8 +442,8 @@ const loadTableData = async () => {
     const response = await itemApi.getItems({
       page: pagination.currentPage,
       size: pagination.pageSize,
-      item_id: searchForm.item_id,
-      item_description: searchForm.item_description,
+      itemId: searchForm.itemId,
+      itemDescription: searchForm.itemDescription,
       unit: searchForm.unit,
     });
 
@@ -486,8 +483,8 @@ const handleSearch = () => {
  * Handle reset search form
  */
 const handleReset = () => {
-  searchForm.item_id = "";
-  searchForm.item_description = "";
+  searchForm.itemId = "";
+  searchForm.itemDescription = "";
   searchForm.unit = "";
   pagination.currentPage = 1;
   loadTableData();
@@ -554,7 +551,7 @@ const handleEdit = (row: Item) => {
 const handleDelete = async (row: Item) => {
   try {
     await ElMessageBox.confirm(
-      `Are you sure you want to delete item "${row.item_description}"?`,
+      `Are you sure you want to delete item "${row.itemDescription}"?`,
       "Confirm Delete",
       {
         confirmButtonText: "Delete",
@@ -700,7 +697,7 @@ const handleUpload = (options: any) => {
     // In real project, call upload API, here using local URL simulation
     const reader = new FileReader();
     reader.onload = (e) => {
-      form.item_graph = e.target?.result as string;
+      form.itemGraph = e.target?.result as string;
       ElMessage.success("Image uploaded successfully");
     };
     reader.readAsDataURL(file);
