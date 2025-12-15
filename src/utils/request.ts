@@ -44,22 +44,37 @@ const realApiRequest = async (requestConfig: any) => {
 
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch {
-        errorMessage = response.statusText || errorMessage;
-      }
 
-      // Deal with the 401 error code
+      try {
+        const text = await response.text();
+
+        if (text) {
+          try {
+            const errorData = JSON.parse(text);
+            if (typeof errorData === "string") {
+              errorMessage = errorData;
+            } else if (
+              errorData &&
+              typeof errorData === "object" &&
+              "message" in errorData &&
+              typeof errorData.message === "string"
+            ) {
+              errorMessage = errorData.message;
+            } else {
+              errorMessage = text;
+            }
+          } catch {
+            errorMessage = text;
+          }
+        } else if (response.statusText) {
+          errorMessage = response.statusText || errorMessage;
+        }
+      } catch {}
+
       if (response.status === 401) {
         ElMessage.error("Login failed. Session expired.");
-        // Clear local token
         AuthStorage.clearAuth();
-        // Jump to login page
-        // router.push('/login');
       } else {
-        // Display the error message from back-end
         ElMessage.error(errorMessage);
       }
 
@@ -70,13 +85,14 @@ const realApiRequest = async (requestConfig: any) => {
     return responseData;
   } catch (error) {
     console.error("API request failed:", error);
-    // Give hint if there is something wrong regarding with internet
+
     if (
       error instanceof TypeError &&
       error.message.includes("Failed to fetch")
     ) {
       ElMessage.error("Connect failed.");
     }
+
     throw error;
   }
 };

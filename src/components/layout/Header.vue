@@ -22,7 +22,7 @@
           class="theme-toggle-btn"
         />
       </el-tooltip>
-      <div class="user-info">Welcome, Admin</div>
+      <div class="user-info">Welcome, {{ authStore.displayName }}</div>
 
       <el-badge :value="3" class="notification-badge">
         <el-button :icon="Bell" circle />
@@ -39,6 +39,7 @@ import { useRoute } from "vue-router";
 import { useTabsStore } from "@/store/tabs";
 import { useThemeStore } from "@/store/theme";
 import { useLayoutStore } from "@/store/layout";
+import { useAuthStore } from "@/store/auth";
 import { Fold, Expand, Sunny, Moon, Bell } from "@element-plus/icons-vue";
 import UserDropdown from "@/components/layout/UserDropDown.vue";
 import GlobalSearch from "@/components/common/GlobalSearch/GlobalSearch.vue"; //
@@ -47,6 +48,7 @@ const route = useRoute();
 const tabsStore = useTabsStore();
 const themeStore = useThemeStore();
 const layoutStore = useLayoutStore();
+const authStore = useAuthStore();
 
 const themeIcon = computed(() => (themeStore.isDark ? Sunny : Moon));
 

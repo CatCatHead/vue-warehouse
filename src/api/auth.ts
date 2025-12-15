@@ -24,6 +24,11 @@ export interface RefreshResult {
   refreshToken: string;
 }
 
+export interface ChangePasswordParams {
+  oldPassword: string;
+  newPassword: string;
+}
+
 export const authApi = {
   // Login
   async login(username: string, password: string, rememberMe = false) {
@@ -64,5 +69,13 @@ export const authApi = {
   // logout
   logout() {
     return http.post<void>("/auth/logout");
+  },
+
+  //change password
+  changePassword(oldPassword: string, newPassword: string) {
+    return http.post("/auth/change-password", {
+      oldPassword,
+      newPassword,
+    });
   },
 };
