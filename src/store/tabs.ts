@@ -102,5 +102,9 @@ export const useTabsStore = defineStore("tabs", {
     findTabByPath(path: string): TabItem | undefined {
       return this.tabs.find((tab) => tab.path === path);
     },
+    resetTabs() {
+      this.tabs = [];
+      this.activeTab = "";
+    },
   },
 });

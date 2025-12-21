@@ -12,6 +12,7 @@
         >
         <el-button
           :icon="Download"
+          v-permission="'user:manage'"
           @click="handleOpenExport"
           :disabled="tableData.length === 0"
         >

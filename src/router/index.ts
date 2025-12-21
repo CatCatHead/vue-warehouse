@@ -1,129 +1,93 @@
-//src/router/index.ts
-import {
-  createRouter,
-  createWebHistory,
-  type RouteRecordRaw,
-} from "vue-router";
-import { setupRouterGuards } from "./guards";
-import { lazyLoad } from "@/utils/lazyLoad";
+// src/router/index.ts
+import { createRouter, createWebHistory } from "vue-router";
+import type { RouteRecordRaw } from "vue-router";
+import { constantRoutes } from "./constant-routes";
+import { useAuthStore } from "@/store/auth";
+import { usePermissionStore } from "@/store/permission";
+import { useTabsStore } from "@/store/tabs";
 
-export const routes: RouteRecordRaw[] = [
-  {
-    path: "/login",
-    name: "Login",
-    component: () => lazyLoad(() => import("@/views/auth/index.vue")),
-  },
-  {
-    path: "/",
-    name: "Root",
-    component: () => lazyLoad(() => import("@/layouts/AppLayout.vue")),
-    meta: { requiresAuth: true, closeable: false },
-    redirect: "/dashboard",
-    children: [
-      {
-        path: "dashboard",
-        name: "Dashboard",
-        component: () => lazyLoad(() => import("@/views/dashboard/index.vue")),
-        meta: { title: "Dashboard", requiresAuth: true, closeable: false },
-      },
-      {
-        path: "users",
-        name: "User",
-        component: () =>
-          lazyLoad(() => import("@/views/system/user/index.vue")),
-        meta: { title: "User Management", requiresAuth: true, closeable: true },
-      },
-      {
-        path: "settings",
-        name: "SystemSettings",
-        component: () =>
-          lazyLoad(() => import("@/views/system/settings/Settings.vue")),
-        meta: { title: "System Settings", requiresAuth: true, closeable: true },
-      },
-      {
-        path: "trackingNumber",
-        name: "TrackingNumber",
-        component: () =>
-          lazyLoad(() => import("@/views/Tracking/TrackingNumber.vue")),
-        meta: { title: "Tracking Number", requiresAuth: true, closeable: true },
-      },
-      {
-        path: "about",
-        name: "About",
-        component: () => lazyLoad(() => import("@/views/about/index.vue")),
-        meta: { title: "About", requiresAuth: true, closeable: true },
-      },
-      {
-        path: "permtest",
-        name: "PermissionTest",
-        component: () => lazyLoad(() => import("@/views/permtest/test.vue")),
-        meta: { title: "Permission Test", requiresAuth: true, closeable: true },
-      },
-      {
-        path: "echart",
-        name: "Echart",
-        component: () => lazyLoad(() => import("@/views/Echart/Echart.vue")),
-        meta: { title: "Echart", requiresAuth: true, closeable: true },
-      },
-      {
-        path: "linens",
-        name: "Linens",
-        component: () => lazyLoad(() => import("@/views/Linen/Linen.vue")),
-        meta: { title: "Linens", requiresAuth: true, closeable: true },
-      },
-      {
-        path: "deliveryList",
-        name: "DeliveryList",
-        component: () =>
-          lazyLoad(() => import("@/views/DeliveryList/DeliveryList.vue")),
-        meta: { title: "DeliveryList", requiresAuth: true, closeable: true },
-      },
-      {
-        path: "deliveryListUpload",
-        name: "DeliveryListUpload",
-        component: () =>
-          lazyLoad(() => import("@/views/DeliveryList/DeliveryListUpload.vue")),
-        meta: {
-          title: "DeliveryListUpload",
-          requiresAuth: true,
-          closeable: true,
-        },
-      },
-      {
-        path: "departments",
-        name: "Departments",
-        component: () =>
-          lazyLoad(() => import("@/views/department/Department.vue")),
-        meta: {
-          title: "Departments",
-          requiresAuth: true,
-          closeable: true,
-        },
-      },
-      {
-        path: "items",
-        name: "Items",
-        component: () => lazyLoad(() => import("@/views/item/Item.vue")),
-        meta: {
-          title: "Items",
-          requiresAuth: true,
-          closeable: true,
-        },
-      },
-    ],
-  },
-  {
-    path: "/:pathMatch(.*)*",
-    name: "NotFound",
-    component: () => lazyLoad(() => import("@/views/error/NotFound.vue")),
-  },
-];
+const WHITE_LIST = ["/login"];
 
 const router = createRouter({
-  history: createWebHistory(),
-  routes,
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: constantRoutes as RouteRecordRaw[],
 });
 
-setupRouterGuards(router);
+let asyncRoutesAdded = false;
+
+export function resetRouter() {
+  const permissionStore = usePermissionStore();
+
+  if (permissionStore.addRoutes.length > 0) {
+    permissionStore.addRoutes.forEach((route) => {
+      if (route.name && router.hasRoute(route.name)) {
+        router.removeRoute(route.name);
+      }
+    });
+  }
+
+  asyncRoutesAdded = false;
+  permissionStore.reset();
+
+  const tabsStore = useTabsStore();
+  tabsStore.resetTabs();
+}
+
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore();
+  const permissionStore = usePermissionStore();
+
+  if (!authStore.isInitialized) {
+    try {
+      await authStore.initializeAuth();
+    } catch (e) {
+      console.error("initializeAuth error:", e);
+    }
+  }
+
+  const logged = authStore.isAuthenticated;
+
+  if (WHITE_LIST.includes(to.path)) {
+    if (!logged) {
+      return next();
+    }
+
+    return next({ path: "/", replace: true });
+  }
+
+  if (!logged) {
+    return next({
+      path: "/login",
+      query: { redirect: to.fullPath },
+      replace: true,
+    });
+  }
+
+  const role = authStore.user?.role || "USER";
+  const perms = authStore.user?.permissions || [];
+
+  if (!asyncRoutesAdded || permissionStore.currentRole !== role) {
+    const accessRoutes = permissionStore.generateRoutes(role, perms);
+
+    accessRoutes.forEach((route) => {
+      if (route.name && !router.hasRoute(route.name)) {
+        router.addRoute(route);
+      }
+    });
+
+    asyncRoutesAdded = true;
+
+    return next({ ...to, replace: true });
+  }
+
+  next();
+});
+
+router.afterEach((to) => {
+  const tabsStore = useTabsStore();
+  if (to.name && to.meta?.title && !to.meta?.hidden) {
+    tabsStore.addTab(to);
+  }
+});
 
 export default router;

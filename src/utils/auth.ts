@@ -59,7 +59,6 @@ export const AuthStorage = {
     // record user's choice
     localStorage.setItem(REMEMBER, rememberMe ? "1" : "0");
 
-    // 验证存储
     const storedAccess = storage.getItem(ACCESS);
     const storedRefresh = refresh ? storage.getItem(REFRESH) : null;
 

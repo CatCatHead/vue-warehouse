@@ -1,9 +1,42 @@
-import type { Directive } from "vue";
-import { useAuthStore } from "@/store/auth";
+import type { Directive, DirectiveBinding } from "vue";
+import { hasPermission, type PermissionValue } from "@/utils/permission";
 
-export const hasPerm: Directive<HTMLElement, string | string[]> = {
-  mounted(el, binding) {
-    const ok = useAuthStore().hasPerm(binding.value);
-    if (!ok && el.parentNode) el.parentNode.removeChild(el);
+interface PermissionBinding extends DirectiveBinding {
+  value: PermissionValue;
+  modifiers: {
+    disable?: boolean; // v-permission.disable
+  };
+}
+
+const permissionDirective: Directive<HTMLElement, PermissionValue> = {
+  mounted(el, binding: PermissionBinding) {
+    applyPermission(el, binding);
+  },
+  updated(el, binding: PermissionBinding) {
+    applyPermission(el, binding);
   },
 };
+
+function applyPermission(el: HTMLElement, binding: PermissionBinding) {
+  const value = binding.value;
+  const hasPerm = hasPermission(value);
+
+  if (binding.modifiers.disable) {
+    const disabled = !hasPerm;
+    (el as any).disabled = disabled;
+    if (disabled) {
+      el.classList.add("is-disabled");
+      el.setAttribute("aria-disabled", "true");
+    } else {
+      el.classList.remove("is-disabled");
+      el.removeAttribute("aria-disabled");
+    }
+    return;
+  }
+
+  if (!hasPerm && el.parentNode) {
+    el.parentNode.removeChild(el);
+  }
+}
+
+export default permissionDirective;

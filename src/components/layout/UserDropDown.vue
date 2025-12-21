@@ -138,6 +138,7 @@ import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import type { FormInstance, FormRules } from "element-plus";
 import { ElMessage } from "element-plus";
+import { useTabsStore } from "@/store/tabs";
 import {
   User,
   Setting,
@@ -146,9 +147,12 @@ import {
 } from "@element-plus/icons-vue";
 import { useAuthStore } from "@/store/auth.ts";
 import { authApi } from "@/api/auth.ts";
+import { resetRouter } from "@/router";
 
 const router = useRouter();
 const auth = useAuthStore();
+
+const tabsStore = useTabsStore();
 
 // logout dialog state
 const logoutDialogVisible = ref(false);
@@ -196,10 +200,17 @@ const changePwdRules: FormRules = {
   ],
 };
 
-const handleCommand = (command: string) => {
+const handleCommand = async (command: string) => {
   switch (command) {
     case "logout":
-      logoutDialogVisible.value = true;
+      try {
+        await authApi.logout();
+      } finally {
+        logoutDialogVisible.value = true;
+        tabsStore.resetTabs();
+        resetRouter();
+        await router.push("/login");
+      }
       break;
     case "profile":
       ElMessage.info("Updating...");
