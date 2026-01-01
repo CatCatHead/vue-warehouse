@@ -59,4 +59,38 @@ export const asyncRoutes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: "/tracking",
+    name: "TrackingRoot",
+    component: Layout,
+    meta: {
+      title: "Tracking Management",
+      icon: "Odometer",
+    },
+    children: [
+      {
+        path: "pending",
+        name: "TrackingPending",
+        component: lazyLoad(
+          () => import("@/views/Tracking/TrackingPending.vue"),
+        ),
+        meta: {
+          title: "Pending Entries",
+          closeable: true,
+        },
+      },
+      {
+        path: "numbers",
+        name: "TrackingNumbers",
+        component: lazyLoad(
+          () => import("@/views/Tracking/TrackingNumber.vue"),
+        ),
+        meta: {
+          title: "Tracking Numbers",
+          requiresAuth: true,
+          closeable: true,
+        },
+      },
+    ],
+  },
 ];

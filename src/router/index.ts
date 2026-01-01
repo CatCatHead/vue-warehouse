@@ -77,7 +77,7 @@ router.beforeEach(async (to, from, next) => {
 
     asyncRoutesAdded = true;
 
-    return next({ ...to, replace: true });
+    return next({ path: to.fullPath, replace: true });
   }
 
   next();
