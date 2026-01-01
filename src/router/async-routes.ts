@@ -8,11 +8,13 @@ const Layout = lazyLoad(() => import("@/layouts/AppLayout.vue"));
 export const asyncRoutes: RouteRecordRaw[] = [
   {
     path: "/system",
+    name: "SystemManagementRoot",
     component: Layout,
     meta: {
       title: "System Management",
       icon: "Setting",
       roles: ["ADMIN"],
+      requiresAuth: true,
     },
     children: [
       {
@@ -22,7 +24,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
           lazyLoad(() => import("@/views/system/user/index.vue")),
         meta: {
           title: "User Management",
-          permissions: ["user:manage"],
           requiresAuth: true,
           closeable: true,
         },
@@ -42,6 +43,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
   },
   {
     path: "/linens",
+    name: "LinensManagementRoot",
     component: Layout,
     meta: {
       title: "Linens Management",
