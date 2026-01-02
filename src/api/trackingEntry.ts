@@ -38,3 +38,16 @@ export function confirmTrackingEntry(id: number) {
 export function rejectTrackingEntry(id: number) {
   return http.post(`/tracking-entries/${id}/reject`);
 }
+
+//======= Created: TrackingEntry for scanning =====
+
+export interface CreateTrackingEntryDto {
+  carrier: string;
+  trackingNumber: string;
+  scanSource?: string;
+  scannedAt?: string;
+}
+
+export function createTrackingEntry(data: CreateTrackingEntryDto) {
+  return http.post("/tracking-entries", data);
+}

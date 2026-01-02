@@ -76,6 +76,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
         ),
         meta: {
           title: "Pending Entries",
+          requiresAuth: true,
           closeable: true,
         },
       },
@@ -88,6 +89,15 @@ export const asyncRoutes: RouteRecordRaw[] = [
         meta: {
           title: "Tracking Numbers",
           requiresAuth: true,
+          closeable: true,
+        },
+      },
+      {
+        path: "scan",
+        name: "TrackingScan",
+        component: lazyLoad(() => import("@/views/Tracking/TrackingScan.vue")),
+        meta: {
+          title: "Scan Tracking",
           closeable: true,
         },
       },
