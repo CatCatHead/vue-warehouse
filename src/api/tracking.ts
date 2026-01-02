@@ -48,9 +48,7 @@ export const trackingApi = {
     params: TrackingListParams,
   ): Promise<TrackingListResponse> {
     // Adjust path if your backend uses a different prefix
-    const res = await http.get<TrackingListResponse>("/tracking-numbers", {
-      params,
-    });
+    const res = await http.get<any>("/tracking-numbers", params);
     return res;
   },
 
