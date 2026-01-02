@@ -33,7 +33,6 @@
             placeholder="Focus here and scan tracking number"
             @focus="handleFocus"
             @blur="handleBlur"
-            @keydown="handleKeydown"
             @keyup.enter="handleEnter"
             clearable
           >
@@ -114,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, reactive, ref } from "vue";
+import { onMounted, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { Aim } from "@element-plus/icons-vue";
 
@@ -133,11 +132,17 @@ const scanInputRef = ref();
 
 const focused = ref(false);
 
+const scannedSet = new Set<string>();
+
 const minLength = 6;
-const maxDuration = 120;
+const maxDuration = 300;
 
 let scanStartTime: number | null = null;
 let lastKeyTime: number | null = null;
+
+// auto scan delay and timer
+const scanEndDelay = 180;
+let scanTimeout: number | null = null;
 
 interface RecentItem {
   time: string;
@@ -195,29 +200,24 @@ function handleBlur() {
   }
 }
 
-function handleKeydown(e: KeyboardEvent) {
-  if (!scanStartTime) {
-    scanStartTime = performance.now();
-  }
-  lastKeyTime = performance.now();
-}
-
 async function handleEnter() {
   const value = scanValue.value.trim();
   if (!value) return;
 
+  resetScanTiming();
+
   const now = performance.now();
-  const duration = scanStartTime ? now - scanStartTime : 9999;
+  const duration = scanStartTime != null ? now - scanStartTime : 9999;
   const length = value.length;
 
   let isScanner = false;
   if (inputMode.value === "auto") {
     isScanner = length >= minLength && duration <= maxDuration;
-  } else {
-    isScanner = false;
   }
 
   await submitTracking(value, isScanner ? "SCANNER" : "KEYBOARD");
+  resetScanState();
+  focusInput();
 }
 
 async function handleManualSubmit() {
@@ -230,9 +230,7 @@ async function handleManualSubmit() {
 }
 
 function clearScanInput() {
-  scanValue.value = "";
-  scanStartTime = null;
-  lastKeyTime = null;
+  resetScanState();
 }
 
 function clearRecentList() {
@@ -243,6 +241,25 @@ async function submitTracking(value: string, source: string) {
   const carrierValue = carrier.value;
   if (!carrierValue) {
     ElMessage.warning("Please select carrier first.");
+    return;
+  }
+
+  const key = `${carrierValue}|${value}`;
+
+  if (scannedSet.has(key)) {
+    pushRecent({
+      time: new Date().toLocaleString(),
+      carrier: carrierValue,
+      trackingNumber: value,
+      source,
+      status: "ERROR",
+      message: "Duplicate in current session",
+    });
+    ElMessage.warning(
+      "This tracking number has already been scanned in this session.",
+    );
+    clearScanInput();
+    focusInput();
     return;
   }
 
@@ -288,6 +305,50 @@ async function submitTracking(value: string, source: string) {
   }
 }
 
+function resetScanTiming() {
+  if (scanTimeout != null) {
+    clearTimeout(scanTimeout);
+    scanTimeout = null;
+  }
+  scanStartTime = null;
+}
+
+function resetScanState() {
+  resetScanTiming();
+  scanValue.value = "";
+}
+
+async function autoSubmitIfScannerWithoutEnter() {
+  const value = scanValue.value.trim();
+  if (!value) {
+    resetScanTiming();
+    return;
+  }
+
+  if (inputMode.value !== "auto") {
+    resetScanTiming();
+    return;
+  }
+
+  const now = performance.now();
+  const duration = scanStartTime != null ? now - scanStartTime : 0;
+  const length = value.length;
+
+  const isScanner = length >= minLength && duration <= maxDuration;
+
+  if (!isScanner) {
+    resetScanTiming();
+    return;
+  }
+
+  try {
+    await submitTracking(value, "SCANNER");
+  } finally {
+    resetScanState();
+    focusInput();
+  }
+}
+
 function renderCarrier(c: string) {
   switch (c) {
     case "FEDEX_EXPRESS":
@@ -302,6 +363,37 @@ function renderCarrier(c: string) {
       return c || "-";
   }
 }
+
+watch(
+  () => scanValue.value,
+  (newVal) => {
+    const value = newVal?.trim() ?? "";
+
+    if (!value) {
+      resetScanTiming();
+      return;
+    }
+
+    const now = performance.now();
+
+    if (scanStartTime == null) {
+      scanStartTime = now;
+    }
+
+    if (inputMode.value !== "auto") {
+      return;
+    }
+
+    if (scanTimeout != null) {
+      clearTimeout(scanTimeout);
+      scanTimeout = null;
+    }
+
+    scanTimeout = window.setTimeout(() => {
+      autoSubmitIfScannerWithoutEnter();
+    }, scanEndDelay);
+  },
+);
 
 onMounted(() => {
   focusInput();
