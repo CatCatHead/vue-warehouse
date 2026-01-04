@@ -1,7 +1,7 @@
 // src/utils/config.ts
 export const config = {
   useMock: false,
-  apiBaseUrl: "http://localhost:8080/api",
+  apiBaseUrl: "http://192.168.1.73:8080/api",
   mockDelay: 0,
   appTitle: "Warehouse Admin",
 };

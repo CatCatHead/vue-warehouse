@@ -17,6 +17,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
     "@vue/eslint-config-typescript": "^14.6.0",
+    "@zxing/browser": "^0.1.5",
     "axios": "^1.12.2",
     "echarts": "^6.0.0",
     "eslint": "^9.37.0",

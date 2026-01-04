@@ -101,6 +101,13 @@ export const asyncRoutes: RouteRecordRaw[] = [
           closeable: true,
         },
       },
+      {
+        path: "mobile-scan",
+        name: "MobileTrackingScan",
+        component: () =>
+          lazyLoad(() => import("@/views/tracking/MobileScan.vue")),
+        meta: { title: "Scan Tracking (Mobile)", closeable: true },
+      },
     ],
   },
 ];

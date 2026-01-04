@@ -23,7 +23,7 @@ const mockUsers = [
 const mockTrackingNumbers = [
   { id: "1", number: "TRK-001", status: "active", carrier: "FedEx" },
   { id: "2", number: "TRK-002", status: "pending", carrier: "UPS" },
-  { id: "3", number: "TRK-003", status: "delivered", carrier: "DHL" },
+  { id: "3", number: "TRK-003", status: "delivered", carrier: "Other" },
 ];
 
 export function useGlobalSearch() {

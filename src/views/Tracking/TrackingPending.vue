@@ -20,7 +20,7 @@
             <el-option label="All carriers" value="" />
             <el-option label="UPS" value="UPS" />
             <el-option label="FedEx" value="FEDEX" />
-            <el-option label="USPS" value="USPS" />
+            <el-option label="FedEx-Express" value="FedEx-Express" />
             <!-- 按你的 TrackingCarrier 枚举再加 -->
           </el-select>
         </el-form-item>

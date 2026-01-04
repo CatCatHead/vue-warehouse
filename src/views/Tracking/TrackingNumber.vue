@@ -36,8 +36,8 @@
           >
             <el-option label="UPS" value="UPS" />
             <el-option label="FedEx" value="FedEx" />
-            <el-option label="DHL" value="DHL" />
-            <el-option label="USPS" value="USPS" />
+            <el-option label="Other" value="Other" />
+            <el-option label="FedEx-Express" value="FedEx-Express" />
           </el-select>
         </el-form-item>
 
@@ -183,8 +183,8 @@
           >
             <el-option label="UPS" value="UPS" />
             <el-option label="FedEx" value="FedEx" />
-            <el-option label="DHL" value="DHL" />
-            <el-option label="USPS" value="USPS" />
+            <el-option label="Other" value="Other" />
+            <el-option label="FedEx-Express" value="FedEx-Express" />
           </el-select>
         </el-form-item>
 
